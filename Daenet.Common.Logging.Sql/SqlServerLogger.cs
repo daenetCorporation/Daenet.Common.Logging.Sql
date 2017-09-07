@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Data;
 
-namespace Daenet.SqlServerLogger
+namespace Daenet.Common.Logging.Sql
 {
     public class SqlServerLogger : ILogger
     {

@@ -1,13 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
-namespace Daenet.SqlServerLogger.Test
+namespace Daenet.Common.Logging.Sql.Test
 {
-    class SqlServerLoggerSwitchTests
+    public class SqlServerLoggerSwitchTests
     {
         private ILogger m_Logger;
 
@@ -26,6 +24,7 @@ namespace Daenet.SqlServerLogger.Test
                 logger.LogTrace(123, "Test Trace Message");
             }
         }
+
         /// <summary>
         /// Initializes the logger
         /// </summary>

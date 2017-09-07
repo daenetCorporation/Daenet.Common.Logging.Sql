@@ -3,7 +3,7 @@ using Xunit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Daenet.SqlServerLogger.Test
+namespace Daenet.Common.Logging.Sql.Test
 {
     //TODO: Please provide tests for combination of namespaces. Use differnet json setting files.
     /*
@@ -22,6 +22,7 @@ namespace Daenet.SqlServerLogger.Test
             initializeSqlServerLogger(null);
         }
 
+
         /// <summary>
         /// TODO: Describe what does this test does.
         /// </summary>
@@ -37,7 +38,6 @@ namespace Daenet.SqlServerLogger.Test
         }
 
 
-
         /// <summary>
         /// Testing scope of the logger
         /// </summary>
@@ -49,8 +49,8 @@ namespace Daenet.SqlServerLogger.Test
                 this.SqlLoggingTest();
             }
         }
-
         
+
         /// <summary>
         /// Initializes the logger
         /// </summary>

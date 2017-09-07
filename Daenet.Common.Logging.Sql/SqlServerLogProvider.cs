@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Daenet.SqlServerLogger
+namespace Daenet.Common.Logging.Sql
 {
     public class SqlServerLogProvider : ILoggerProvider
     {

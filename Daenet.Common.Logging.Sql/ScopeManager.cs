@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Daenet.SqlServerLogger
+namespace Daenet.Common.Logging.Sql
 {
     /// <summary>
     /// Handles scopes.

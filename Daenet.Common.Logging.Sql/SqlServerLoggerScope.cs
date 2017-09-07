@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace Daenet.SqlServerLogger
+namespace Daenet.Common.Logging.Sql
 {
     class SqlServerLoggerScope
     {
