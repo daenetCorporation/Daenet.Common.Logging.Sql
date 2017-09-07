@@ -6,7 +6,7 @@ This repository contains Implementation of ASP.NET Core Logger Provider in SQL S
 ### Installation 
 
 
-**Install** the Daenet.SqlServerLogger [NuGet Package](http:// "Link missing") in your application.
+**Install** the Daenet.Common.Logging.Sql [NuGet Package](https://www.nuget.org/packages/Daenet.Common.Logging.Sql) in your application.
 
 ### Configuration
 
