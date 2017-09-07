@@ -1,0 +1,13 @@
+﻿{
+  "IncludeScopes": true,
+  "Switches": {
+    "Daenet": 0
+  },
+  "SqlServer": {
+    "ConnectionString": "",
+    "TableName": "TestLog",
+    "CreateTblIfNotExist": false,
+    "IncludeExceptionStackTrace": false,
+    "IgnoreLoggingErrors": false
+  }
+}
