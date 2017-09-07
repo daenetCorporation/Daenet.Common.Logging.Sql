@@ -4,7 +4,7 @@
     "Default": 0
   },
   "SqlProvider": {
-    "ConnectionString": "Server=tcp:test-indraneel.database.windows.net,1433;Initial Catalog=testDB;Persist Security Info=False;User ID=ipole;Password=Indraneel17;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+    "ConnectionString": "Add your connection string",
     "TableName": "TestLoggerDB",
     "CreateTblIfNotExist": false,
     "IncludeExceptionStackTrace": false,
