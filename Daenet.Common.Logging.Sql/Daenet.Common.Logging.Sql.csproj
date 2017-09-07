@@ -4,6 +4,14 @@
     <TargetFramework>netstandard1.3</TargetFramework>
     <Version>0.0.1</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Description>A .NET Core logger provider to log directly into a SQL Database.</Description>
+    <Authors>daenet</Authors>
+    <Company>daenet Gesellschaft für Informationstechnologie mbH</Company>
+    <Copyright>daenet Gesellschaft für Informationstechnologie mbH</Copyright>
+    <PackageIconUrl>https://avatars3.githubusercontent.com/u/12556447?v=4&amp;s=200</PackageIconUrl>
+    <RepositoryUrl>https://github.com/daenetCorporation/Daenet.Common.Logging.Sql.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/daenetCorporation/Daenet.Common.Logging.Sql</PackageProjectUrl>
+    <PackageTags>ilogger asp-net-core net-core core sql</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

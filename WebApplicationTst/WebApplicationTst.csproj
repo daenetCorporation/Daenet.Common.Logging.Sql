@@ -16,7 +16,7 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Daenet.SqlServerLogger\Daenet.Common.Logging.Sql.csproj" />
+    <ProjectReference Include="..\Daenet.Common.Logging.Sql\Daenet.Common.Logging.Sql.csproj" />
   </ItemGroup>
 
 </Project>

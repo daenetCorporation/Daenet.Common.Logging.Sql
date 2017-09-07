@@ -29,6 +29,7 @@ namespace Daenet.Common.Logging.Sql.Test
         /// Initializes the logger
         /// </summary>
         /// <param name="filter"></param>
+        /// <param name="settingsFile"></param>
         private ILogger getLogger(Func<string, LogLevel, bool> filter, string settingsFile)
         {
             ConfigurationBuilder builder = new ConfigurationBuilder();
