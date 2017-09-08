@@ -138,7 +138,7 @@ namespace Daenet.Common.Logging.Sql
             cmd.Parameters.Add(new SqlParameter("@EventId", eventId.Id));
             cmd.Parameters.Add(new SqlParameter("@Type", Enum.GetName(typeof(Microsoft.Extensions.Logging.LogLevel), logLevel)));
             cmd.Parameters.Add(new SqlParameter("@Message", state.ToString()));
-            cmd.Parameters.Add(new SqlParameter("@Timestamp", DateTime.Now));
+            cmd.Parameters.Add(new SqlParameter("@Timestamp", DateTime.UtcNow));
             cmd.Parameters.Add(new SqlParameter("@CategoryName", m_CategoryName));
             cmd.Parameters.Add(new SqlParameter("@Exception", exception == null ? string.Empty : exception.ToString()));
 
