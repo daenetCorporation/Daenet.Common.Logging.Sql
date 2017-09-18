@@ -54,10 +54,19 @@ namespace Daenet.Common.Logging.Sql
             config.GetSection("Switches").Bind(settings.Switches);
 
             var sqlServerSection = config.GetSection("SqlProvider");
+
             settings.ConnectionString = sqlServerSection.GetValue<string>("ConnectionString");
+
+            if (String.IsNullOrEmpty(settings.ConnectionString))
+                throw new ArgumentException("SqlProvider:ConnectionString is Null or Empty!", nameof(settings.ConnectionString));
+
             settings.IncludeExceptionStackTrace = sqlServerSection.GetValue<bool>("IncludeExceptionStackTrace");
 
             settings.TableName = sqlServerSection.GetValue<string>("TableName");
+
+            if (String.IsNullOrEmpty(settings.TableName))
+                throw new ArgumentException("SqlProvider:TableName is Null or Empty!", nameof(settings.TableName));
+
             settings.CreateTblIfNotExist = sqlServerSection.GetValue<bool>("CreateTblIfNotExist");
             settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
 
