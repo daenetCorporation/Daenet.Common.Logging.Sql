@@ -10,8 +10,14 @@ namespace Daenet.Common.Logging.Sql
     {
         #region General SettingsILogger 
 
+        /// <summary>
+        /// Defines the LogLevel for specific sources.
+        /// </summary>
         IDictionary<string, LogLevel> Switches { get; set; }
 
+        /// <summary>
+        /// Flag if scopes should be included.
+        /// </summary>
         bool IncludeScopes { get; }
 
         /// <summary>
@@ -26,9 +32,13 @@ namespace Daenet.Common.Logging.Sql
         /// </summary>
         string ConnectionString { get; }
 
-        string TableName { get; }
         /// <summary>
-        /// Specifies the retry policy to be used in commuication with SqlServer.
+        /// Table name in database
+        /// </summary>
+        string TableName { get; }
+
+        /// <summary>
+        /// Specifies the retry policy to be used in communication with SqlServer.
         /// </summary>
         //RetryPolicy RetryPolicy { get; set; }
 
@@ -37,6 +47,9 @@ namespace Daenet.Common.Logging.Sql
         /// </summary>
         bool CreateTblIfNotExist { get; set; }
 
+        /// <summary>
+        /// Flag if Logger should throw an exception if logging fails.
+        /// </summary>
         bool IgnoreLoggingErrors { get; }
         #endregion
     }

@@ -77,6 +77,7 @@ namespace Daenet.Common.Logging.Sql
 
             if (!IsEnabled(logLevel))
                 return;
+
             using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
             {
                 conn.Open();
@@ -229,7 +230,7 @@ namespace Daenet.Common.Logging.Sql
                 m_IsLoggingDisabledOnError = true;
             }
             else
-                throw (ex);
+                throw new Exception("Ignore Error is disabled.", ex);
         }
         #endregion
     }
