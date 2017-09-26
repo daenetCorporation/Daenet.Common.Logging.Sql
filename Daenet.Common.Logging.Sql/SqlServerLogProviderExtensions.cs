@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Daenet.Common.Logging.Sql
 {
@@ -11,6 +13,17 @@ namespace Daenet.Common.Logging.Sql
     /// </summary>
     public static class SqlServerLogProviderExtensions
     {
+
+        /// <summary>
+        /// Adds a console logger named 'Console' to the factory.
+        /// </summary>
+        /// <param name="builder">The <see cref="ILoggingBuilder"/> to use.</param>
+        public static ILoggingBuilder AddSqlServerLogger(this ILoggingBuilder builder)
+        {
+            builder.Services.AddSingleton<ILoggerProvider, SqlServerLogProvider>();
+            return builder;
+        }
+
         /// <summary>
         /// Adds Sql Logger to LoggerFactory
         /// </summary>
@@ -50,10 +63,17 @@ namespace Daenet.Common.Logging.Sql
         public static ISqlServerLoggerSettings GetSqlServerLoggerSettings(this IConfiguration config)
         {
             SqlServerLoggerSettings settings = new SqlServerLoggerSettings();
-            settings.IncludeScopes = config.GetValue<bool>("IncludeScopes");
-            config.GetSection("Switches").Bind(settings.Switches);
+            //settings.IncludeScopes = config.GetValue<bool>("IncludeScopes");
+            //if (config.GetSection("Level").Exists())
+            //{
+            //    config.GetSection("Level").Bind(settings.Switches);
+            //}
+            //else if (config.GetSection("Switches").Exists())
+            //{
+            //    config.GetSection("Switches").Bind(settings.Switches);
+            //}
 
-            var sqlServerSection = config.GetSection("SqlProvider");
+            var sqlServerSection = config.GetSection("SqlProviderSettings");
 
             settings.ConnectionString = sqlServerSection.GetValue<string>("ConnectionString");
 

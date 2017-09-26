@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Daenet.Common.Logging.Sql
 {
+    [ProviderAlias("SqlProvider")]
     public class SqlServerLogProvider : ILoggerProvider
     {
         private ISqlServerLoggerSettings m_Settings;
@@ -19,17 +20,20 @@ namespace Daenet.Common.Logging.Sql
         /// <param name="filter">TODO..</param>
         public SqlServerLogProvider(ISqlServerLoggerSettings settings, Func<string, LogLevel, bool> filter)
         {
-            this.m_Filter = filter;
+            if (filter == null)
+                this.m_Filter = ((category, logLevel) => true);
+            else
+                this.m_Filter = filter;
             this.m_Settings = settings;
         }
-        
+
         /// <summary>
         /// Create SQL Logger
         /// </summary>
         /// <param name="categoryName"></param>
         /// <returns>Returns Logger</returns>
         public ILogger CreateLogger(string categoryName)
-        {            
+        {
             return m_Loggers.GetOrAdd(categoryName, createLoggerImplementation);
         }
 

@@ -26,10 +26,13 @@ In the ***appsettings.json***, following configuration needs to be added -
 ```JSON
 "SqlLogging":{
 "IncludeScopes": true,
-  "Switches": {
-    "Default": 0
+  "LogLevel": {
+    "Default": "Error"
   },
   "SqlProvider": {
+    "Default": "Error"
+  },
+  "SqlProviderSettings": {
     "ConnectionString": "SQL database connection string",
     "TableName": "Name of the table",
     "CreateTblIfNotExist": false,
@@ -38,6 +41,9 @@ In the ***appsettings.json***, following configuration needs to be added -
   }
  }
 ```
+
+***LogLevel*** configuration are done on global and logger level see [Introduction to Logging in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging?tabs=aspnetcore2x)
+
 ***IncludeScope*** flag is used when the logging is to be done inside one particular scope. IncludeScope when set to true, and initialized inside code with *beginScope("scopeStatement")* adds scope id to every logged statement which is added to database under column "Scope".
 Following example illustrates using scope in logging when *IncludeScopes* flag is set to true.
 
@@ -49,36 +55,7 @@ Following example illustrates using scope in logging when *IncludeScopes* flag i
 ```
 This will add "Scope begins : *new hexadecimal guid*" for every object instance of the class where scope is began.
 
-***Switches***, are used to define log level for different namespaces. Every namespace can be assigned different log levels. everything above the assigned log level is logged by the logger. By default, if log level is set to 0, everything is logged. If highest namespace is used, the log level is assigned to all member classes of this namespaces.
-Following is the list of log levels that are available - 
-
-| Id            | Log Level     |
-| ------------- |:-------------:|
-| 0             | Trace         |
-| 1             | Debug         |
-| 2             | Information   |
-| 3             | Warning       |
-| 4             | Error         |
-| 5             | Critical      |
-
-Id or log level names can both be used interchangeably. Following is the example to assign log level values - 
-
-```JSON
-"Switches": {
-    "Library.Test": 0,
-    "Application.Test" : "Debug",
-    "Example":"Trace"
-  }
-```
-To assign same log level to all namespaces in project, *Default* keyword should be used -
-
-```JSON
-"Switches": {
-    "Default": 0
-  }
-```
-
-***SqlProvider*** section of the configuration contains SQL Logger specific configurations.
+***SqlProviderSettings*** section of the configuration contains SQL Logger specific configurations.
 
 
 *ConnectionString* is ADO.NET connection string for SQL authentication.

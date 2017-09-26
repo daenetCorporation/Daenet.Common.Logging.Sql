@@ -12,10 +12,6 @@ namespace Daenet.Common.Logging.Sql
     public class SqlServerLogger : ILogger
     {
 
-        private readonly string m_EventHubName;
-        private readonly string m_HostName;
-        private readonly string m_SasToken;
-        private readonly string m_SubSystem;
 
         /// <summary>
         /// Set on true if the Logging fails and it is set on IgnoreLoggingErrors.
@@ -27,7 +23,7 @@ namespace Daenet.Common.Logging.Sql
         private Func<string, LogLevel, bool> m_Filter;
         private string m_CategoryName;
 
-        private ScopeManager m_ScopeManager;
+        //  private ScopeManager m_ScopeManager;
 
         public Func<LogLevel, EventId, object, Exception, SqlCommand> SqlCommandFormatter { get; set; }
 
@@ -41,7 +37,7 @@ namespace Daenet.Common.Logging.Sql
 
                 m_CategoryName = categoryName;
                 if (filter == null)
-                    m_Filter = filter ?? ((category, logLevel) => true);
+                    m_Filter = ((category, logLevel) => true);
                 else
                     m_Filter = filter;
 
@@ -95,14 +91,7 @@ namespace Daenet.Common.Logging.Sql
                 throw new ArgumentNullException(nameof(state));
             }
 
-            if (m_Settings.IncludeScopes && this.m_ScopeManager == null)
-            {
-                this.m_ScopeManager = new ScopeManager(state);
-            }
-
-            var scope = m_ScopeManager.Push(state);
-
-            return scope;
+            return SqlServerLoggerScope.Push("SqlServerLogger", state);
         }
 
         /// <summary>
@@ -132,10 +121,11 @@ namespace Daenet.Common.Logging.Sql
         /// <returns>SQL command to be inserted in SQL server</returns>
         private SqlCommand defaultSqlCmdFormatter(LogLevel logLevel, EventId eventId, object state, Exception exception)
         {
+
             SqlCommand cmd = new SqlCommand();
             cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (Scope, EventId, Type, Message, Timestamp, Exception, CategoryName) VALUES (@Scope, @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName)";
             //            cmd.Parameters.Add(new SqlParameter("@Scope", this.m_ScopeManager == null ? string.Empty : this.m_ScopeManager.Current));
-            cmd.Parameters.Add(new SqlParameter("@Scope", m_ScopeManager == null ? String.Empty : m_ScopeManager.Current));
+            cmd.Parameters.Add(new SqlParameter("@Scope", getScopeInformation()));
             cmd.Parameters.Add(new SqlParameter("@EventId", eventId.Id));
             cmd.Parameters.Add(new SqlParameter("@Type", Enum.GetName(typeof(Microsoft.Extensions.Logging.LogLevel), logLevel)));
             cmd.Parameters.Add(new SqlParameter("@Message", state.ToString()));
@@ -151,25 +141,26 @@ namespace Daenet.Common.Logging.Sql
 
         private string getScopeInformation()
         {
-            if (m_Settings.IncludeScopes)
+            StringBuilder builder = new StringBuilder();
+            var current = SqlServerLoggerScope.Current;
+            string scopeLog = string.Empty;
+            var length = builder.Length;
+
+            while (current != null)
             {
-                StringBuilder builder = new StringBuilder(); ;
-                var current = SqlServerLoggerScope.Current;
-                string scopeLog = string.Empty;
-
-                while (current != null)
+                if (length == builder.Length)
                 {
-                    if (builder.Length == 0)
-                        scopeLog = $"{current}";
-                    else
-                        scopeLog = $"/{current}";
-
-                    builder.Append(scopeLog);
-                    current = current.Parent;
+                    scopeLog = $"=> {current}";
                 }
-                return builder.ToString();
+                else
+                {
+                    scopeLog = $"=> {current} ";
+                }
+
+                builder.Insert(length, scopeLog);
+                current = current.Parent;
             }
-            return "";
+            return builder.ToString();
         }
 
         /// <summary>
