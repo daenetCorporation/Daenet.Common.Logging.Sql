@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Daenet.Common.Logging.Sql
 {
-    class SqlServerLoggerSettings : ISqlServerLoggerSettings
+    public class SqlServerLoggerSettings : ISqlServerLoggerSettings
     {
         public IDictionary<string, LogLevel> Switches { get; set; } = new Dictionary<string, LogLevel>();
 
