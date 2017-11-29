@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Daenet.Common.Logging.Sql
 {
     /// <summary>
-    /// Defines the configuraiton of SqlServerLogger.
+    /// Defines the configuration of SqlServerLogger.
     /// </summary>
     public interface ISqlServerLoggerSettings
     {
