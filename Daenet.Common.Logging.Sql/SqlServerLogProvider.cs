@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -25,6 +26,15 @@ namespace Daenet.Common.Logging.Sql
             else
                 this.m_Filter = filter;
             this.m_Settings = settings;
+        }
+
+        /// <summary>
+        /// Creates SQL Logger Provider 
+        /// </summary>
+        /// <param name="settings">Logger Settings</param>
+        /// <param name="filter">TODO..</param>
+        public SqlServerLogProvider(IOptions<SqlServerLoggerSettings> settings) : this(settings.Value, null)
+        {
         }
 
         /// <summary>

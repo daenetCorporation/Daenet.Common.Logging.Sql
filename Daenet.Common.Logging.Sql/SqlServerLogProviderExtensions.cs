@@ -30,7 +30,7 @@ namespace Daenet.Common.Logging.Sql
         /// </summary>
         /// <param name="builder">The <see cref="ILoggingBuilder"/> to use.</param>
         /// <param name="configure"></param>
-        public static ILoggingBuilder AddSqlServerLogger(this ILoggingBuilder builder, Action<ISqlServerLoggerSettings> configure)
+        public static ILoggingBuilder AddSqlServerLogger(this ILoggingBuilder builder, Action<SqlServerLoggerSettings> configure)
         {
             if (configure == null)
             {
@@ -81,16 +81,7 @@ namespace Daenet.Common.Logging.Sql
         /// <returns></returns>
         public static ISqlServerLoggerSettings GetSqlServerLoggerSettings(this IConfiguration config)
         {
-            SqlServerLoggerSettings settings = new SqlServerLoggerSettings();
-            //settings.IncludeScopes = config.GetValue<bool>("IncludeScopes");
-            //if (config.GetSection("Level").Exists())
-            //{
-            //    config.GetSection("Level").Bind(settings.Switches);
-            //}
-            //else if (config.GetSection("Switches").Exists())
-            //{
-            //    config.GetSection("Switches").Bind(settings.Switches);
-            //}
+             var settings = new SqlServerLoggerSettings();
 
             var sqlServerSection = config.GetSection("SqlProviderSettings");
 
@@ -110,6 +101,34 @@ namespace Daenet.Common.Logging.Sql
             settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
 
             return settings;
+        }
+
+        /// <summary>
+        /// Set settings from configuration.
+        /// </summary>
+        /// <param name="config">Configuration for SQL Server Logging.</param>
+        /// <returns></returns>
+        public static void SetSqlServerLoggerSettings(this SqlServerLoggerSettings settings, IConfiguration config)
+        {
+            if (settings == null)
+                settings = new SqlServerLoggerSettings();
+
+            var sqlServerSection = config.GetSection("SqlProviderSettings");
+
+            settings.ConnectionString = sqlServerSection.GetValue<string>("ConnectionString");
+
+            if (String.IsNullOrEmpty(settings.ConnectionString))
+                throw new ArgumentException("SqlProvider:ConnectionString is Null or Empty!", nameof(settings.ConnectionString));
+
+            settings.IncludeExceptionStackTrace = sqlServerSection.GetValue<bool>("IncludeExceptionStackTrace");
+
+            settings.TableName = sqlServerSection.GetValue<string>("TableName");
+
+            if (String.IsNullOrEmpty(settings.TableName))
+                throw new ArgumentException("SqlProvider:TableName is Null or Empty!", nameof(settings.TableName));
+
+            settings.CreateTblIfNotExist = sqlServerSection.GetValue<bool>("CreateTblIfNotExist");
+            settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
         }
     }
 }
