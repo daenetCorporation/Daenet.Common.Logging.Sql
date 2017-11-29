@@ -21,25 +21,37 @@ This repository contains Implementation of ASP.NET Core Logger Provider in SQL S
   ILogger logger = loggerFactory.CreateLogger<SqlServerLoggerTests>();
   ```
 
-In the ***appsettings.json***, following configuration needs to be added - 
+In the ***appsettings.json***, the `SqlProviderSettings` part needs to be added.
 
 ```JSON
-"SqlLogging":{
-"IncludeScopes": true,
-  "LogLevel": {
-    "Default": "Error"
-  },
-  "SqlProvider": {
-    "Default": "Error"
-  },
-  "SqlProviderSettings": {
-    "ConnectionString": "SQL database connection string",
-    "TableName": "Name of the table",
-    "CreateTblIfNotExist": false,
-    "IncludeExceptionStackTrace": false,
-    "IgnoreLoggingErrors": false
+{
+  "Logging": {
+    "IncludeScopes": false,
+    "Debug": {
+      "LogLevel": {
+        "Default": "Warning"
+      }
+    },
+    "Console": {
+      "LogLevel": {
+        "Default": "Warning"
+      }
+    },
+    "SqlProvider": {
+      "LogLevel": {
+        "Default": "Error"
+      }
+    },
+    "SqlProviderSettings": {
+      "ConnectionString": "SQL database connection string",
+      "TableName": "Name of the table",
+      "CreateTblIfNotExist": false,
+      "IncludeExceptionStackTrace": false,
+      "IgnoreLoggingErrors": false
+    }
   }
- }
+}
+
 ```
 
 ***LogLevel*** configuration are done on global and logger level see [Introduction to Logging in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging?tabs=aspnetcore2x)
