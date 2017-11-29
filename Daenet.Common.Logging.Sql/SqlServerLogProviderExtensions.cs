@@ -30,7 +30,7 @@ namespace Daenet.Common.Logging.Sql
         /// </summary>
         /// <param name="builder">The <see cref="ILoggingBuilder"/> to use.</param>
         /// <param name="configure"></param>
-        public static ILoggingBuilder AddConsole(this ILoggingBuilder builder, Action<SqlServerLoggerSettings> configure)
+        public static ILoggingBuilder AddSqlServerLogger(this ILoggingBuilder builder, Action<SqlServerLoggerSettings> configure)
         {
             if (configure == null)
             {
