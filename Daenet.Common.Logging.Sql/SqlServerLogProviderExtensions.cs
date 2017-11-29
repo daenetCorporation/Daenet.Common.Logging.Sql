@@ -15,12 +15,31 @@ namespace Daenet.Common.Logging.Sql
     {
 
         /// <summary>
-        /// Adds a console logger named 'Console' to the factory.
+        /// Adds a sql logger named 'SqlServerLogger' to the factory.
         /// </summary>
         /// <param name="builder">The <see cref="ILoggingBuilder"/> to use.</param>
         public static ILoggingBuilder AddSqlServerLogger(this ILoggingBuilder builder)
         {
             builder.Services.AddSingleton<ILoggerProvider, SqlServerLogProvider>();
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds a sql logger named 'SqlServerLogger' to the factory.
+        /// </summary>
+        /// <param name="builder">The <see cref="ILoggingBuilder"/> to use.</param>
+        /// <param name="configure"></param>
+        public static ILoggingBuilder AddConsole(this ILoggingBuilder builder, Action<SqlServerLoggerSettings> configure)
+        {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            builder.AddSqlServerLogger();
+            builder.Services.Configure(configure);
+
             return builder;
         }
 
