@@ -121,11 +121,11 @@ namespace Daenet.Common.Logging.Sql
         /// <returns>SQL command to be inserted in SQL server</returns>
         private SqlCommand defaultSqlCmdFormatter(LogLevel logLevel, EventId eventId, object state, Exception exception)
         {
+            var scope = getScopeInformation(out Dictionary<string, string> scopeValues);
 
             SqlCommand cmd = new SqlCommand();
-            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (Scope, EventId, Type, Message, Timestamp, Exception, CategoryName) VALUES (@Scope, @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName)";
-            //            cmd.Parameters.Add(new SqlParameter("@Scope", this.m_ScopeManager == null ? string.Empty : this.m_ScopeManager.Current));
-            cmd.Parameters.Add(new SqlParameter("@Scope", getScopeInformation()));
+
+            cmd.Parameters.Add(new SqlParameter("@Scope", scope));
             cmd.Parameters.Add(new SqlParameter("@EventId", eventId.Id));
             cmd.Parameters.Add(new SqlParameter("@Type", Enum.GetName(typeof(Microsoft.Extensions.Logging.LogLevel), logLevel)));
             cmd.Parameters.Add(new SqlParameter("@Message", state.ToString()));
@@ -133,14 +133,27 @@ namespace Daenet.Common.Logging.Sql
             cmd.Parameters.Add(new SqlParameter("@CategoryName", m_CategoryName));
             cmd.Parameters.Add(new SqlParameter("@Exception", exception == null ? string.Empty : exception.ToString()));
 
-            //if (m_ScopeManager != null)
-            //    Debug.WriteLine(m_ScopeManager.Current);
+            StringBuilder values = new StringBuilder();
+            StringBuilder columns = new StringBuilder();
+
+            foreach (var item in scopeValues)
+            {
+                values.Append(", ");
+                values.Append(cmd.Parameters.AddWithValue("@" + item.Key, item.Value).ParameterName);
+
+                columns.Append(", " + item.Key);
+            }
+
+            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (Scope, EventId, Type, Message, Timestamp, Exception, CategoryName {columns}) " +
+                $"VALUES (@Scope, @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {values})";
 
             return cmd;
         }
 
-        private string getScopeInformation()
+        private string getScopeInformation(out Dictionary<string, string> dictionary)
         {
+            dictionary = new Dictionary<string, string>();
+
             StringBuilder builder = new StringBuilder();
             var current = SqlServerLoggerScope.Current;
             string scopeLog = string.Empty;
@@ -148,13 +161,24 @@ namespace Daenet.Common.Logging.Sql
 
             while (current != null)
             {
-                if (length == builder.Length)
+                if (current.CurrentValue is IDictionary<string, object> dict)
                 {
-                    scopeLog = $"=> {current}";
+                    foreach (var item in dict)
+                    {
+                        if (!dictionary.ContainsKey(item.Key))
+                            dictionary.Add(item.Key, item.Value.ToString());
+                    }
                 }
                 else
                 {
-                    scopeLog = $"=> {current} ";
+                    if (length == builder.Length)
+                    {
+                        scopeLog = $"=> {current}";
+                    }
+                    else
+                    {
+                        scopeLog = $"=> {current} ";
+                    }
                 }
 
                 builder.Insert(length, scopeLog);

@@ -40,6 +40,14 @@ namespace Daenet.Common.Logging.Sql
             return new DisposableScope();
         }
 
+        internal object CurrentValue
+        {
+            get
+            {
+                return _state;
+            }
+        }
+
         public override string ToString()
         {
             return _state?.ToString();
