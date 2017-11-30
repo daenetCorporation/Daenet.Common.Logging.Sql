@@ -43,8 +43,7 @@ namespace Daenet.Common.SampleApp.Middleware
             else
                 activityId = Guid.NewGuid().ToString();
 
-            //m_Logger.BeginScope("ActivityId:" + acID);
-            m_Logger.BeginScope(new Dictionary<string, object>()
+            using (m_Logger.BeginScope(new Dictionary<string, object>()
                 {
                 {cActivityIdHdrName, activityId }
             });
