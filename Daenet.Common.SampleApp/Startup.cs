@@ -26,6 +26,15 @@ namespace Daenet.Common.SampleApp
         {
             services.AddMvc();
 
+            services.AddDistributedMemoryCache();
+
+            services.AddSession(options =>
+            {
+                // Set a short timeout for easy testing.
+                options.IdleTimeout = TimeSpan.FromSeconds(20);
+                options.Cookie.HttpOnly = true;
+            });
+
             services.AddScoped<ValuesApi>();
         }
 
@@ -38,6 +47,8 @@ namespace Daenet.Common.SampleApp
             }
 
             app.UseMiddleware<RequestLoggerMiddleware>();
+            
+            app.UseSession();
 
             app.UseMvc();
         }

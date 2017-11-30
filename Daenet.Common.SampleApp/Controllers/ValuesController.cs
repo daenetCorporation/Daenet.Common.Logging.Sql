@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 
 namespace Daenet.Common.SampleApp.Controllers
 {
@@ -24,6 +25,24 @@ namespace Daenet.Common.SampleApp.Controllers
         public IEnumerable<string> Get()
         {
             m_Logger.LogInformation(100, "Entered {method}", nameof(Get));
+
+            HttpContext.Session.SetString("abc", DateTime.Now.ToString());
+
+            //
+            // Test Scopes
+            using (m_Logger.BeginScope("SCOPE 1.1"))
+            {
+                m_Logger.LogCritical(1000, "111");
+                using (m_Logger.BeginScope("SCOPE 1.2"))
+                {
+                    m_Logger.LogCritical(1001, "222");
+
+                    using (m_Logger.BeginScope("SCOPE 1.3"))
+                    {
+                        m_Logger.LogCritical(1002, "333");
+                    }
+                }
+            }
 
             var ret = m_Api.Get();
 

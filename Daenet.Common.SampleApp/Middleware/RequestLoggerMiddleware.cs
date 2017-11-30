@@ -7,11 +7,14 @@ using System.Threading.Tasks;
 
 namespace Daenet.Common.SampleApp.Middleware
 {
+  
     /// <summary>
     /// Begin Scope for given ActivityID or creates new ActivityID
     /// </summary>
     public class RequestLoggerMiddleware
     {
+        private const string cActivityIdHdrName = "ActivityId";
+
         private readonly RequestDelegate m_Next;
         private readonly ILogger m_Logger;
 
@@ -33,20 +36,22 @@ namespace Daenet.Common.SampleApp.Middleware
         /// <returns></returns>
         public async Task Invoke(HttpContext context)
         {
-            string acID = "";
-            if (context.Request.Headers.ContainsKey("ActivityID"))
-                acID = context.Request.Headers["ActivityID"];
+            string activityId = "";
+
+            if (context.Request.Headers.ContainsKey(cActivityIdHdrName))
+                activityId = context.Request.Headers[cActivityIdHdrName];
             else
-                acID = Guid.NewGuid().ToString();
+                activityId = Guid.NewGuid().ToString();
 
             //m_Logger.BeginScope("ActivityId:" + acID);
             m_Logger.BeginScope(new Dictionary<string, object>()
                 {
-                { "ActivityID", acID }
+                {cActivityIdHdrName, activityId }
             });
 
+            context.Response.Headers.Add(cActivityIdHdrName, activityId);
 
-                await m_Next.Invoke(context);
+            await m_Next.Invoke(context);
         }
     }
 }
