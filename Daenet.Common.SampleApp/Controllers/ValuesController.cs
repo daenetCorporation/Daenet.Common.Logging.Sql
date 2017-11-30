@@ -26,6 +26,8 @@ namespace Daenet.Common.SampleApp.Controllers
         {
             m_Logger.LogInformation(100, "Entered {method}", nameof(Get));
 
+            var str = HttpContext.Session.GetString("abc");
+            
             HttpContext.Session.SetString("abc", DateTime.Now.ToString());
 
             //

@@ -46,7 +46,7 @@ namespace Daenet.Common.SampleApp.Middleware
             using (m_Logger.BeginScope(new Dictionary<string, object>()
                 {
                 {cActivityIdHdrName, activityId }
-            });
+            })) 
 
             context.Response.Headers.Add(cActivityIdHdrName, activityId);
 
