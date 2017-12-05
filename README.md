@@ -5,12 +5,34 @@ This repository contains Implementation of ASP.NET Core Logger Provider in SQL S
 
 ### Installation 
 
-
 **Install** the Daenet.Common.Logging.Sql [NuGet Package](https://www.nuget.org/packages/Daenet.Common.Logging.Sql) in your application.
 
 ### Configuration
 
-**Following code block**, shows how to add SqlServerLogger provider to the loggerFactory in Startup class:
+The SqlServerLogger needs to be configured and initialized.
+
+**ASP.NET Core Web Application**
+
+```C#
+public static IWebHost BuildWebHost(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+            .ConfigureLogging((hostingContext, logging) =>
+            {
+                var loggerSection = hostingContext.Configuration.GetSection("Logging");
+                logging.AddConfiguration(loggerSection);
+                logging.AddConsole();
+                logging.AddDebug();
+                logging.AddSqlServerLogger((sett) =>
+                {
+                    sett.SetSqlServerLoggerSettings(loggerSection);
+                });
+            })
+                .Build();
+    }
+```
+
+**Console Application**
 
 ```C#
   public IConfigurationRoot Configuration;
@@ -51,7 +73,6 @@ In the ***appsettings.json***, the `SqlProviderSettings` part needs to be added.
     }
   }
 }
-
 ```
 
 ***LogLevel*** configuration are done on global and logger level see [Introduction to Logging in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging?tabs=aspnetcore2x)
