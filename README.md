@@ -39,7 +39,7 @@ public static IWebHost BuildWebHost(string[] args) =>
   var builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
   Configuration = builder.Build();
 
-  ILoggerFactory loggerFactory = new LoggerFactory().AddSqlServerLogger(Configuration.GetSection("SqlLogging"));
+  ILoggerFactory loggerFactory = new LoggerFactory().AddSqlServerLogger(Configuration.GetSection("Logging"));
   ILogger logger = loggerFactory.CreateLogger<SqlServerLoggerTests>();
   ```
 
