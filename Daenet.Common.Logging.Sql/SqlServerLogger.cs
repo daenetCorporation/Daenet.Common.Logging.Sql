@@ -71,6 +71,8 @@ namespace Daenet.Common.Logging.Sql
             //else
             //    Debug.WriteLine($">>>{state}");
 
+            var stateDictionary = state as IReadOnlyList<KeyValuePair<string, object>>;
+
             if (!IsEnabled(logLevel))
                 return;
 

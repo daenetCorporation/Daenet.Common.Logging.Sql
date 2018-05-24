@@ -34,7 +34,7 @@ namespace Daenet.Common.SampleApp.Controllers
             // Test Scopes
             using (m_Logger.BeginScope("SCOPE 1.1"))
             {
-                m_Logger.LogCritical(1000, "111");
+                m_Logger.LogCritical(1000, "{PAR1}-{PAR2}", 100, "200");
                 using (m_Logger.BeginScope("SCOPE 1.2"))
                 {
                     m_Logger.LogCritical(1001, "222");
