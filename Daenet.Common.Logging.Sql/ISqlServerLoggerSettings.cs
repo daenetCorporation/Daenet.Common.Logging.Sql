@@ -51,6 +51,11 @@ namespace Daenet.Common.Logging.Sql
         /// Flag if Logger should throw an exception if logging fails.
         /// </summary>
         bool IgnoreLoggingErrors { get; }
+
+        /// <summary>
+        /// Character or text, which separetes scopes. I.E.: ' ', '/', '=>'
+        /// </summary>
+        string ScopeSeparator { get; set; }
         #endregion
     }
 }

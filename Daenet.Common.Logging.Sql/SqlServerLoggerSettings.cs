@@ -20,5 +20,7 @@ namespace Daenet.Common.Logging.Sql
         public bool CreateTblIfNotExist { get; set; }
 
         public bool IgnoreLoggingErrors { get; set; }
+
+        public string ScopeSeparator { get; set; }
     }
 }

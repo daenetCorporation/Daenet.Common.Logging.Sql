@@ -25,6 +25,7 @@ namespace Daenet.Common.Logging.Sql
                 this.m_Filter = ((category, logLevel) => true);
             else
                 this.m_Filter = filter;
+
             this.m_Settings = settings;
         }
 

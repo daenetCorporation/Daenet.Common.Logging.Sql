@@ -4,10 +4,11 @@
     "Default": 0
   },
   "SqlProvider": {
-    "ConnectionString": "Add your connection string",
+    "ConnectionString": "TODO",
     "TableName": "TestLoggerDB",
-    "CreateTblIfNotExist": false,
+    "CreateTblIfNotExist": true,
     "IncludeExceptionStackTrace": false,
-    "IgnoreLoggingErrors": false
+    "IgnoreLoggingErrors": false,
+    "ScopeSeparator":  "/"
   }
 }

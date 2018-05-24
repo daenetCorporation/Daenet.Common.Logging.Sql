@@ -48,11 +48,12 @@ namespace Daenet.Common.Logging.Sql
         /// </summary>
         /// <param name="loggerFactory">LoggerFactory Instance</param>
         /// <param name="settings">Sql Logger Settings</param>
-        /// <param name="filter">If specified it will override all defined switches.</param>       
-        /// <returns></returns>
+        /// <param name="filter">If specified it will override all defined switches.</param>  
+        /// <returns></returns>        
         public static ILoggerFactory AddSqlServerLogger(this ILoggerFactory loggerFactory,
           ISqlServerLoggerSettings settings,
-          Func<string, LogLevel, bool> filter = null)
+          Func<string, LogLevel, bool> filter = null,
+          string scopeSeparator = null)
         {
             loggerFactory.AddProvider(new SqlServerLogProvider(settings, filter));
 
@@ -81,9 +82,9 @@ namespace Daenet.Common.Logging.Sql
         /// <returns></returns>
         public static ISqlServerLoggerSettings GetSqlServerLoggerSettings(this IConfiguration config)
         {
-             var settings = new SqlServerLoggerSettings();
+            var settings = new SqlServerLoggerSettings();
 
-            var sqlServerSection = config.GetSection("SqlProviderSettings");
+            var sqlServerSection = config.GetSection("SqlProvider");
 
             settings.ConnectionString = sqlServerSection.GetValue<string>("ConnectionString");
 
@@ -99,6 +100,7 @@ namespace Daenet.Common.Logging.Sql
 
             settings.CreateTblIfNotExist = sqlServerSection.GetValue<bool>("CreateTblIfNotExist");
             settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
+            settings.ScopeSeparator = sqlServerSection.GetValue<string>("ScopeSeparator");
 
             return settings;
         }

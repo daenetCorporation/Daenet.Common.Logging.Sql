@@ -18,7 +18,7 @@ namespace Daenet.Common.Logging.Sql.Test
         [Fact]
         public void TestFullName()
         {
-            ILogger logger = this.getLogger(null, "SSLoggerSwitchNamespaceSettings");
+            ILogger logger = this.getLogger(null, "SqlServerLoggerSettings.json");
             using (logger.BeginScope(Guid.NewGuid()))
             {
                 logger.LogTrace(123, "Test Trace Message");

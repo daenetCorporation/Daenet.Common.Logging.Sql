@@ -11,8 +11,6 @@ namespace Daenet.Common.Logging.Sql
 {
     public class SqlServerLogger : ILogger
     {
-
-
         /// <summary>
         /// Set on true if the Logging fails and it is set on IgnoreLoggingErrors.
         /// </summary>
@@ -22,8 +20,6 @@ namespace Daenet.Common.Logging.Sql
         private ISqlServerLoggerSettings m_Settings;
         private Func<string, LogLevel, bool> m_Filter;
         private string m_CategoryName;
-
-        //  private ScopeManager m_ScopeManager;
 
         public Func<LogLevel, EventId, object, Exception, SqlCommand> SqlCommandFormatter { get; set; }
 
@@ -35,7 +31,10 @@ namespace Daenet.Common.Logging.Sql
             {
                 m_Settings = settings;
 
-                m_CategoryName = categoryName;
+                if (m_Settings.ScopeSeparator == null)
+                    m_Settings.ScopeSeparator = "=>";
+
+               m_CategoryName = categoryName;
                 if (filter == null)
                     m_Filter = ((category, logLevel) => true);
                 else
@@ -64,13 +63,18 @@ namespace Daenet.Common.Logging.Sql
             }
         }
 
+
+        /// <summary>
+        /// Logs the message to SQL table.
+        /// </summary>
+        /// <typeparam name="TState"></typeparam>
+        /// <param name="logLevel"></param>
+        /// <param name="eventId"></param>
+        /// <param name="state"></param>
+        /// <param name="exception"></param>
+        /// <param name="exceptionFormatter"></param>
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> exceptionFormatter)
         {
-            //if (m_ScopeManager != null)
-            //    Debug.WriteLine($">>>{this.m_ScopeManager.Current} - {state}");
-            //else
-            //    Debug.WriteLine($">>>{state}");
-
             var stateDictionary = state as IReadOnlyList<KeyValuePair<string, object>>;
 
             if (!IsEnabled(logLevel))
@@ -86,6 +90,13 @@ namespace Daenet.Common.Logging.Sql
             }
         }
 
+
+        /// <summary>
+        /// Begins the scope.
+        /// </summary>
+        /// <typeparam name="TState"></typeparam>
+        /// <param name="state"></param>
+        /// <returns></returns>
         public IDisposable BeginScope<TState>(TState state)
         {
             if (state == null)
@@ -138,16 +149,8 @@ namespace Daenet.Common.Logging.Sql
             StringBuilder values = new StringBuilder();
             StringBuilder columns = new StringBuilder();
 
-            foreach (var item in scopeValues)
-            {
-                values.Append(", ");
-                values.Append(cmd.Parameters.AddWithValue("@" + item.Key, item.Value).ParameterName);
-
-                columns.Append(", " + item.Key);
-            }
-
-            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (Scope, EventId, Type, Message, Timestamp, Exception, CategoryName {columns}) " +
-                $"VALUES (@Scope, @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {values})";
+            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (Scope, EventId, Type, Message, Timestamp, Exception, CategoryName) " +
+                $"VALUES (@Scope, @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName)";
 
             return cmd;
         }
@@ -163,29 +166,19 @@ namespace Daenet.Common.Logging.Sql
 
             while (current != null)
             {
-                if (current.CurrentValue is IDictionary<string, object> dict)
+                if (length == builder.Length)
                 {
-                    foreach (var item in dict)
-                    {
-                        if (!dictionary.ContainsKey(item.Key))
-                            dictionary.Add(item.Key, item.Value.ToString());
-                    }
+                    scopeLog = $"{m_Settings.ScopeSeparator}{current}";
                 }
                 else
                 {
-                    if (length == builder.Length)
-                    {
-                        scopeLog = $"=> {current}";
-                    }
-                    else
-                    {
-                        scopeLog = $"=> {current} ";
-                    }
+                    scopeLog = $"{m_Settings.ScopeSeparator}{current} ";
                 }
-
+                
                 builder.Insert(length, scopeLog);
                 current = current.Parent;
             }
+
             return builder.ToString();
         }
 
