@@ -83,26 +83,29 @@ namespace Daenet.Common.Logging.Sql
         public static ISqlServerLoggerSettings GetSqlServerLoggerSettings(this IConfiguration config)
         {
             var settings = new SqlServerLoggerSettings();
-
-            var sqlServerSection = config.GetSection("SqlProvider");
-
-            settings.ConnectionString = sqlServerSection.GetValue<string>("ConnectionString");
-
-            if (String.IsNullOrEmpty(settings.ConnectionString))
-                throw new ArgumentException("SqlProvider:ConnectionString is Null or Empty!", nameof(settings.ConnectionString));
-
-            settings.IncludeExceptionStackTrace = sqlServerSection.GetValue<bool>("IncludeExceptionStackTrace");
-
-            settings.TableName = sqlServerSection.GetValue<string>("TableName");
-
-            if (String.IsNullOrEmpty(settings.TableName))
-                throw new ArgumentException("SqlProvider:TableName is Null or Empty!", nameof(settings.TableName));
-
-            settings.CreateTblIfNotExist = sqlServerSection.GetValue<bool>("CreateTblIfNotExist");
-            settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
-            settings.ScopeSeparator = sqlServerSection.GetValue<string>("ScopeSeparator");
-
+            SetSqlServerLoggerSettings(settings, config);
             return settings;
+            /*            var settings = new SqlServerLoggerSettings();
+
+                        var sqlServerSection = config.GetSection("SqlProvider");
+
+                        settings.ConnectionString = sqlServerSection.GetValue<string>("ConnectionString");
+
+                        if (String.IsNullOrEmpty(settings.ConnectionString))
+                            throw new ArgumentException("SqlProvider:ConnectionString is Null or Empty!", nameof(settings.ConnectionString));
+
+                        settings.IncludeExceptionStackTrace = sqlServerSection.GetValue<bool>("IncludeExceptionStackTrace");
+
+                        settings.TableName = sqlServerSection.GetValue<string>("TableName");
+
+                        if (String.IsNullOrEmpty(settings.TableName))
+                            throw new ArgumentException("SqlProvider:TableName is Null or Empty!", nameof(settings.TableName));
+
+                        settings.CreateTblIfNotExist = sqlServerSection.GetValue<bool>("CreateTblIfNotExist");
+                        settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
+                        settings.ScopeSeparator = sqlServerSection.GetValue<string>("ScopeSeparator");
+
+                        return settings;*/
         }
 
         /// <summary>
@@ -131,6 +134,17 @@ namespace Daenet.Common.Logging.Sql
 
             settings.CreateTblIfNotExist = sqlServerSection.GetValue<bool>("CreateTblIfNotExist");
             settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
+            settings.ScopeSeparator = sqlServerSection.GetValue<string>("ScopeSeparator");
+
+            var columnsMapping = sqlServerSection.GetSection("ScopeColumnMapping");
+            if (columnsMapping != null)
+            {
+                foreach (var item in columnsMapping.GetChildren())
+                {
+                    settings.ScopeColumnMapping.Add(new KeyValuePair<string, string>(item.Key, item.Value));
+                }
+            }
+
         }
     }
 }

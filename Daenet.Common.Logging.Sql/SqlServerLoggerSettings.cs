@@ -22,5 +22,7 @@ namespace Daenet.Common.Logging.Sql
         public bool IgnoreLoggingErrors { get; set; }
 
         public string ScopeSeparator { get; set; }
+
+        public IList<KeyValuePair<string, string>> ScopeColumnMapping { get; set; } = new List<KeyValuePair<string, string>>();
     }
 }

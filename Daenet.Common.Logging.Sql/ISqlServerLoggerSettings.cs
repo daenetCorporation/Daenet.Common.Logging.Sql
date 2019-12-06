@@ -56,6 +56,8 @@ namespace Daenet.Common.Logging.Sql
         /// Character or text, which separetes scopes. I.E.: ' ', '/', '=>'
         /// </summary>
         string ScopeSeparator { get; set; }
+
+        IList<KeyValuePair<string, string>> ScopeColumnMapping { get; }
         #endregion
     }
 }

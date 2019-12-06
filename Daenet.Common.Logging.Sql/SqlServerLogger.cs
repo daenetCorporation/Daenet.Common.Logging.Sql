@@ -6,6 +6,8 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Text;
 using System.Data;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace Daenet.Common.Logging.Sql
 {
@@ -34,7 +36,7 @@ namespace Daenet.Common.Logging.Sql
                 if (m_Settings.ScopeSeparator == null)
                     m_Settings.ScopeSeparator = "=>";
 
-               m_CategoryName = categoryName;
+                m_CategoryName = categoryName;
                 if (filter == null)
                     m_Filter = ((category, logLevel) => true);
                 else
@@ -80,14 +82,17 @@ namespace Daenet.Common.Logging.Sql
             if (!IsEnabled(logLevel))
                 return;
 
-            using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
+            Task.Run(() =>
             {
-                conn.Open();
-                SqlCommand cmd = SqlCommandFormatter(logLevel, eventId, state, exception);
-                cmd.Connection = conn;
-                cmd.ExecuteNonQuery();
-                conn.Close();
-            }
+                using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
+                {
+                    conn.Open();
+                    SqlCommand cmd = SqlCommandFormatter(logLevel, eventId, state, exception);
+                    cmd.Connection = conn;
+                    cmd.ExecuteNonQuery();
+                    conn.Close();
+                }
+            });
         }
 
 
@@ -103,6 +108,7 @@ namespace Daenet.Common.Logging.Sql
             {
                 throw new ArgumentNullException(nameof(state));
             }
+
 
             return SqlServerLoggerScope.Push("SqlServerLogger", state);
         }
@@ -146,11 +152,16 @@ namespace Daenet.Common.Logging.Sql
             cmd.Parameters.Add(new SqlParameter("@CategoryName", m_CategoryName));
             cmd.Parameters.Add(new SqlParameter("@Exception", exception == null ? string.Empty : exception.ToString()));
 
+            foreach (var item in scopeValues)
+            {
+                cmd.Parameters.Add(new SqlParameter(item.Key, item.Value));
+            }
+
             StringBuilder values = new StringBuilder();
             StringBuilder columns = new StringBuilder();
 
-            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (Scope, EventId, Type, Message, Timestamp, Exception, CategoryName) " +
-                $"VALUES (@Scope, @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName)";
+            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (Scope, EventId, Type, Message, Timestamp, Exception, CategoryName {string.Join("", scopeValues.Select(a=> "," + a.Key))}) " +
+                $"VALUES (@Scope, @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {string.Join("", scopeValues.Select(a => ",@" + a.Key))})";
 
             return cmd;
         }
@@ -166,6 +177,17 @@ namespace Daenet.Common.Logging.Sql
 
             while (current != null)
             {
+                if (current.CurrentValue is IEnumerable<KeyValuePair<string, object>>)
+                {
+                    foreach (var item in (IEnumerable<KeyValuePair<string, object>>)current.CurrentValue)
+                    {
+                        var map = this.m_Settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
+                        if (!String.IsNullOrEmpty(map.Key))
+                        {
+                            dictionary.Add(map.Value, item.Value.ToString());
+                        }
+                    }
+                }
                 if (length == builder.Length)
                 {
                     scopeLog = $"{m_Settings.ScopeSeparator}{current}";
@@ -174,7 +196,7 @@ namespace Daenet.Common.Logging.Sql
                 {
                     scopeLog = $"{m_Settings.ScopeSeparator}{current} ";
                 }
-                
+
                 builder.Insert(length, scopeLog);
                 current = current.Parent;
             }
