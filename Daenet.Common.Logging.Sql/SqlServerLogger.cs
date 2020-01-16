@@ -140,8 +140,12 @@ namespace Daenet.Common.Logging.Sql
         /// <returns>SQL command to be inserted in SQL server</returns>
         private SqlCommand defaultSqlCmdFormatter(LogLevel logLevel, EventId eventId, object state, Exception exception)
         {
-            var scope = getScopeInformation(out Dictionary<string, string> scopeValues);
-
+            string scope = string.Empty;
+            Dictionary<string, string> scopeValues;
+            if (SqlServerLoggerScope.Current != null)
+                scope = SqlServerLoggerScope.Current.GetScopeInformation(out scopeValues, m_Settings);
+            else
+                scopeValues = new Dictionary<string, string>();
             SqlCommand cmd = new SqlCommand();
 
             cmd.Parameters.Add(new SqlParameter("@Scope", scope));
@@ -166,43 +170,43 @@ namespace Daenet.Common.Logging.Sql
             return cmd;
         }
 
-        private string getScopeInformation(out Dictionary<string, string> dictionary)
-        {
-            dictionary = new Dictionary<string, string>();
+        //private string getScopeInformation(out Dictionary<string, string> dictionary)
+        //{
+        //    dictionary = new Dictionary<string, string>();
 
-            StringBuilder builder = new StringBuilder();
-            var current = SqlServerLoggerScope.Current;
-            string scopeLog = string.Empty;
-            var length = builder.Length;
+        //    StringBuilder builder = new StringBuilder();
+        //    var current = SqlServerLoggerScope.Current;
+        //    string scopeLog = string.Empty;
+        //    var length = builder.Length;
 
-            while (current != null)
-            {
-                if (current.CurrentValue is IEnumerable<KeyValuePair<string, object>>)
-                {
-                    foreach (var item in (IEnumerable<KeyValuePair<string, object>>)current.CurrentValue)
-                    {
-                        var map = this.m_Settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
-                        if (!String.IsNullOrEmpty(map.Key))
-                        {
-                            dictionary.Add(map.Value, item.Value.ToString());
-                        }
-                    }
-                }
-                if (length == builder.Length)
-                {
-                    scopeLog = $"{m_Settings.ScopeSeparator}{current}";
-                }
-                else
-                {
-                    scopeLog = $"{m_Settings.ScopeSeparator}{current} ";
-                }
+        //    while (current != null)
+        //    {
+        //        if (current.CurrentValue is IEnumerable<KeyValuePair<string, object>>)
+        //        {
+        //            foreach (var item in (IEnumerable<KeyValuePair<string, object>>)current.CurrentValue)
+        //            {
+        //                var map = this.m_Settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
+        //                if (!String.IsNullOrEmpty(map.Key))
+        //                {
+        //                    dictionary.Add(map.Value, item.Value.ToString());
+        //                }
+        //            }
+        //        }
+        //        if (length == builder.Length)
+        //        {
+        //            scopeLog = $"{m_Settings.ScopeSeparator}{current}";
+        //        }
+        //        else
+        //        {
+        //            scopeLog = $"{m_Settings.ScopeSeparator}{current} ";
+        //        }
 
-                builder.Insert(length, scopeLog);
-                current = current.Parent;
-            }
+        //        builder.Insert(length, scopeLog);
+        //        current = current.Parent;
+        //    }
 
-            return builder.ToString();
-        }
+        //    return builder.ToString();
+        //}
 
         /// <summary>
         /// Checks if the Table Exists
