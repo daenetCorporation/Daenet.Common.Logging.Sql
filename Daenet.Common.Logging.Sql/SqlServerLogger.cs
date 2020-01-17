@@ -140,73 +140,31 @@ namespace Daenet.Common.Logging.Sql
         /// <returns>SQL command to be inserted in SQL server</returns>
         private SqlCommand defaultSqlCmdFormatter(LogLevel logLevel, EventId eventId, object state, Exception exception)
         {
-            string scope = string.Empty;
             Dictionary<string, string> scopeValues;
             if (SqlServerLoggerScope.Current != null)
-                scope = SqlServerLoggerScope.Current.GetScopeInformation(out scopeValues, m_Settings);
+                scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
             else
                 scopeValues = new Dictionary<string, string>();
             SqlCommand cmd = new SqlCommand();
 
-            cmd.Parameters.Add(new SqlParameter("@Scope", scope));
             cmd.Parameters.Add(new SqlParameter("@EventId", eventId.Id));
             cmd.Parameters.Add(new SqlParameter("@Type", Enum.GetName(typeof(Microsoft.Extensions.Logging.LogLevel), logLevel)));
             cmd.Parameters.Add(new SqlParameter("@Message", state.ToString()));
             cmd.Parameters.Add(new SqlParameter("@Timestamp", DateTime.UtcNow));
             cmd.Parameters.Add(new SqlParameter("@CategoryName", m_CategoryName));
-            cmd.Parameters.Add(new SqlParameter("@Exception", exception == null ? string.Empty : exception.ToString()));
+            cmd.Parameters.Add(new SqlParameter("@Exception", exception == null ? (object)DBNull.Value : exception?.ToString()));
 
             foreach (var item in scopeValues)
             {
                 cmd.Parameters.Add(new SqlParameter(item.Key, item.Value));
             }
 
-            StringBuilder values = new StringBuilder();
-            StringBuilder columns = new StringBuilder();
-
-            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (Scope, EventId, Type, Message, Timestamp, Exception, CategoryName {string.Join("", scopeValues.Select(a=> "," + a.Key))}) " +
-                $"VALUES (@Scope, @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {string.Join("", scopeValues.Select(a => ",@" + a.Key))})";
+            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (EventId, Type, Message, Timestamp, Exception, CategoryName {string.Join("", scopeValues.Select(a=> "," + a.Key))}) " +
+                $"VALUES ( @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {string.Join("", scopeValues.Select(a => ",@" + a.Key))})";
 
             return cmd;
         }
 
-        //private string getScopeInformation(out Dictionary<string, string> dictionary)
-        //{
-        //    dictionary = new Dictionary<string, string>();
-
-        //    StringBuilder builder = new StringBuilder();
-        //    var current = SqlServerLoggerScope.Current;
-        //    string scopeLog = string.Empty;
-        //    var length = builder.Length;
-
-        //    while (current != null)
-        //    {
-        //        if (current.CurrentValue is IEnumerable<KeyValuePair<string, object>>)
-        //        {
-        //            foreach (var item in (IEnumerable<KeyValuePair<string, object>>)current.CurrentValue)
-        //            {
-        //                var map = this.m_Settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
-        //                if (!String.IsNullOrEmpty(map.Key))
-        //                {
-        //                    dictionary.Add(map.Value, item.Value.ToString());
-        //                }
-        //            }
-        //        }
-        //        if (length == builder.Length)
-        //        {
-        //            scopeLog = $"{m_Settings.ScopeSeparator}{current}";
-        //        }
-        //        else
-        //        {
-        //            scopeLog = $"{m_Settings.ScopeSeparator}{current} ";
-        //        }
-
-        //        builder.Insert(length, scopeLog);
-        //        current = current.Parent;
-        //    }
-
-        //    return builder.ToString();
-        //}
 
         /// <summary>
         /// Checks if the Table Exists

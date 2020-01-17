@@ -10,8 +10,6 @@ namespace Daenet.Common.Logging.Sql
     {
         private readonly string _name;
         private readonly object _state;
-        //private Dictionary<string, string> _scopeInformation;
-        //private string _scope;
 
         internal SqlServerLoggerScope(string name, object state)
         {
@@ -20,7 +18,6 @@ namespace Daenet.Common.Logging.Sql
         }
 
         public SqlServerLoggerScope Parent { get; private set; }
-        public string Scope { get; set; }
         public Dictionary<string, string> ScopeInformation { get; set; }
 
         private static AsyncLocal<SqlServerLoggerScope> _value = new AsyncLocal<SqlServerLoggerScope>();
@@ -58,52 +55,64 @@ namespace Daenet.Common.Logging.Sql
             return _state?.ToString();
         }
 
-        internal string GetScopeInformation(out Dictionary<string, string> dictionary, ISqlServerLoggerSettings settings)
+        internal Dictionary<string, string> GetScopeInformation(ISqlServerLoggerSettings settings)
         {
-            if (ScopeInformation == null)
+            if (settings.ScopeColumnMapping != null || settings.ScopeColumnMapping.Count > 0)
             {
-                dictionary = new Dictionary<string, string>();
-
-                StringBuilder builder = new StringBuilder();
-                var current = this;//SqlServerLoggerScope.Current;
-                string scopeLog = string.Empty;
-                var length = builder.Length;
-
-                while (current != null)
+                Dictionary<string, string> dictionary;
+                if (ScopeInformation == null)
                 {
-                    if (current.CurrentValue is IEnumerable<KeyValuePair<string, object>>)
+                    dictionary = new Dictionary<string, string>();
+                    var builder = new StringBuilder();
+                    var current = this;
+                    var scopeLog = string.Empty;
+                    var length = builder.Length;
+                   
+                    //Is adding scope path configured
+                    var addScopePath = !string.IsNullOrEmpty(settings.ScopeColumnMapping.FirstOrDefault(k => k.Key == "SCOPEPATH").Key);
+                   
+                    while (current != null)
                     {
-                        foreach (var item in (IEnumerable<KeyValuePair<string, object>>)current.CurrentValue)
+                        if (current.CurrentValue is IEnumerable<KeyValuePair<string, object>>)
                         {
-                            var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
-                            if (!String.IsNullOrEmpty(map.Key))
+                            foreach (var item in (IEnumerable<KeyValuePair<string, object>>)current.CurrentValue)
                             {
-                                dictionary.Add(map.Value, item.Value.ToString());
+                                var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
+                                if (!String.IsNullOrEmpty(map.Key))
+                                {
+                                    dictionary.Add(map.Value, item.Value.ToString());
+                                }
                             }
                         }
-                    }
-                    if (length == builder.Length)
-                    {
-                        scopeLog = $"{settings.ScopeSeparator}{current}";
-                    }
-                    else
-                    {
-                        scopeLog = $"{settings.ScopeSeparator}{current} ";
-                    }
+                        if (addScopePath)
+                        {
+                            if (length == builder.Length)
+                            {
+                                scopeLog = $"{settings.ScopeSeparator}{current}";
+                            }
+                            else
+                            {
+                                scopeLog = $"{settings.ScopeSeparator}{current} ";
+                            }
 
-                    builder.Insert(length, scopeLog);
-                    current = current.Parent;
-
+                            builder.Insert(length, scopeLog);
+                        }
+                        current = current.Parent;
+                    }
+                    if (addScopePath)
+                        dictionary.Add("Scope", builder.ToString());
+                  
+                    this.ScopeInformation = new Dictionary<string, string>(dictionary);
                 }
-                //return builder.ToString();
-                this.Scope = builder.ToString();
-                this.ScopeInformation = new Dictionary<string, string>(dictionary);
+                else
+                {
+                    dictionary = ScopeInformation;
+                }
             }
             else
-            {
-                dictionary = ScopeInformation;
-            }
-            return Scope.ToString();
+                ScopeInformation = new Dictionary<string, string>();
+
+            return ScopeInformation;
         }
 
         private class DisposableScope : IDisposable
