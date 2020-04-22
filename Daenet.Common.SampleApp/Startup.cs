@@ -24,7 +24,7 @@ namespace Daenet.Common.SampleApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddControllers();
 
             services.AddDistributedMemoryCache();
 
@@ -47,10 +47,15 @@ namespace Daenet.Common.SampleApp
             }
 
             app.UseMiddleware<RequestLoggerMiddleware>();
-            
+
+            app.UseRouting();
+
             app.UseSession();
 
-            app.UseMvc();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }

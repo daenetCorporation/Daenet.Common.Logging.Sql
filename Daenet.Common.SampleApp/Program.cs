@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Daenet.Common.Logging.Sql;
+using Microsoft.Extensions.Hosting;
 
 namespace Daenet.Common.SampleApp
 {
@@ -15,23 +16,26 @@ namespace Daenet.Common.SampleApp
     {
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            CreateHostBuilder(args).Build().Run();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-            .ConfigureLogging((hostingContext, logging) =>
-            {
-                var loggerSection = hostingContext.Configuration.GetSection("Logging");
-                logging.AddConfiguration(loggerSection);
-                logging.AddConsole();
-                logging.AddDebug();
-                logging.AddSqlServerLogger((sett) =>
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    sett.SetSqlServerLoggerSettings(loggerSection);
+                    webBuilder.UseStartup<Startup>()
+        .ConfigureLogging((hostingContext, logging) =>
+        {
+            var loggerSection = hostingContext.Configuration.GetSection("Logging");
+            logging.AddConfiguration(loggerSection);
+            logging.AddConsole();
+            logging.AddDebug();
+            logging.AddSqlServerLogger((sett) =>
+            {
+                sett.SetSqlServerLoggerSettings(loggerSection);
+            });
+        });
                 });
-            })
-                .Build();
     }
 }
+

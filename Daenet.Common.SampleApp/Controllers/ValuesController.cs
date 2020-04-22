@@ -8,8 +8,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace Daenet.Common.SampleApp.Controllers
 {
+    [ApiController]
     [Route("api/[controller]")]
-    public class ValuesController : Controller
+    public class ValuesController : ControllerBase
     {
         private ILogger<ValuesController> m_Logger;
         private ValuesApi m_Api;
