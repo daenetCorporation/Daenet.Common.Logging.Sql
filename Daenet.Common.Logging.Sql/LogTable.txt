@@ -1,27 +1,25 @@
-CREATE TABLE [dbo].[TLog](
-       [Id] [bigint] IDENTITY(1,1) NOT NULL,
-       [EventId] [int] NULL,
-       [Type] [nvarchar](3) NOT NULL,
-       [Scope] [nvarchar](255) NULL,
-	   [Message] [nvarchar](max) NOT NULL,
-       [Exception] [nvarchar](max) NULL,
-       [TimeStamp] [datetime] NOT NULL,
-       [Param0] [nvarchar](max) NULL,
-       [Param1] [nvarchar](max) NULL,
-       [Param2] [nvarchar](max) NULL,
-       [Param3] [nvarchar](max) NULL,
-       [Param4] [nvarchar](max) NULL,
-       [Param5] [nvarchar](max) NULL,
-       [Param6] [nvarchar](max) NULL,
-       [Param7] [nvarchar](max) NULL,
-       [Param8] [nvarchar](max) NULL,
-       [Param9] [nvarchar](max) NULL,
-       [UserName] [nvarchar](255) NULL,
-       [MachineName] [nvarchar](40) NULL,
-       [Application] [nvarchar](255) NULL
-CONSTRAINT [PK_TLog] PRIMARY KEY CLUSTERED 
+/****** Object:  Table [dbo].[SqlLog]    Script Date: 22.04.2020 14:11:42 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[SqlLog](
+	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[EventId] [int] NULL,
+	[Type] [nvarchar](12) NOT NULL,
+	[Scope] [nvarchar](max) NULL,
+	[Message] [nvarchar](max) NOT NULL,
+	[Exception] [nvarchar](max) NULL,
+	[TimeStamp] [datetime] NOT NULL,
+	[CategoryName] [nvarchar](max) NULL,
+	--[RequestId] [nvarchar](max) NULL,
+	--[RequestPath] [nvarchar](max) NULL,
+ CONSTRAINT [PK_SqlLog] PRIMARY KEY CLUSTERED 
 (
-       [Id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	[Id] ASC
+)WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
 
