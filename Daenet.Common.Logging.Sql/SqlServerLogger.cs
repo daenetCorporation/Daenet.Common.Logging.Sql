@@ -22,6 +22,7 @@ namespace Daenet.Common.Logging.Sql
         private ISqlServerLoggerSettings m_Settings;
         private Func<string, LogLevel, bool> m_Filter;
         private string m_CategoryName;
+        private SqlBatchLogTask m_CurrentLogTask;
 
         public Func<LogLevel, EventId, object, Exception, SqlCommand> SqlCommandFormatter { get; set; }
 
@@ -77,22 +78,24 @@ namespace Daenet.Common.Logging.Sql
         /// <param name="exceptionFormatter"></param>
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> exceptionFormatter)
         {
-            var stateDictionary = state as IReadOnlyList<KeyValuePair<string, object>>;
+
+            //var stateDictionary = state as IReadOnlyList<KeyValuePair<string, object>>;
 
             if (!IsEnabled(logLevel))
                 return;
-
-            Task.Run(() =>
-            {
-                using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
-                {
-                    conn.Open();
-                    SqlCommand cmd = SqlCommandFormatter(logLevel, eventId, state, exception);
-                    cmd.Connection = conn;
-                    cmd.ExecuteNonQuery();
-                    conn.Close();
-                }
-            });
+            m_CurrentLogTask.Push(logLevel, eventId, state, exception);
+            //if(m_Settings.)
+            //Task.Run(() =>
+            //{
+            //    using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
+            //    {
+            //        conn.Open();
+            //        SqlCommand cmd = SqlCommandFormatter(logLevel, eventId, state, exception);
+            //        cmd.Connection = conn;
+            //        cmd.ExecuteNonQuery();
+            //        conn.Close();ev
+            //    }
+            //});
         }
 
 
@@ -159,7 +162,7 @@ namespace Daenet.Common.Logging.Sql
                 cmd.Parameters.Add(new SqlParameter(item.Key, item.Value));
             }
 
-            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (EventId, Type, Message, Timestamp, Exception, CategoryName {string.Join("", scopeValues.Select(a=> "," + a.Key))}) " +
+            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (EventId, Type, Message, Timestamp, Exception, CategoryName {string.Join("", scopeValues.Select(a => "," + a.Key))}) " +
                 $"VALUES ( @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {string.Join("", scopeValues.Select(a => ",@" + a.Key))})";
 
             return cmd;
