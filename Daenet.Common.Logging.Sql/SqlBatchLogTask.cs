@@ -9,16 +9,27 @@ using System.Threading.Tasks;
 
 namespace Daenet.Common.Logging.Sql
 {
-    internal class SqlBatchLogTask : Task
+    internal class SqlBatchLogTask
     {
         private ISqlServerLoggerSettings m_Settings;
         private string m_CategoryName;
         private DataTable m_CurrentQueue;
         private int m_BatchSize;
-        public SqlBatchLogTask(Action action) : base(action)
+        private const int staticColumnCount = 6; // EventId, Type, Message, TimeStamp, CategoryName, Exception = 6
+        private int columnCount;
+        List<object[]> CurrentList = new List<object[]>();
+
+
+        public SqlBatchLogTask(ISqlServerLoggerSettings settings)
         {
-            m_BatchSize = Convert.ToInt32(m_Settings.ScopeColumnMapping.FirstOrDefault(s => s.Key == "BatchSize").Value);
+            m_Settings = settings;
+            m_BatchSize = Convert.ToInt32(m_Settings.BatchSize);
+
+            m_CurrentQueue = new DataTable();
+
+            columnCount = staticColumnCount + m_Settings.ScopeColumnMapping.Count();
         }
+
         public static SqlBatchLogTask Current { get; set; }
 
         public void Push<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception)
@@ -28,50 +39,76 @@ namespace Daenet.Common.Logging.Sql
                 scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
             else
                 scopeValues = new Dictionary<string, string>();
-            var entry = m_CurrentQueue.NewRow();
-            entry["EventId"] = eventId.Id;
-            entry["Type"] = Enum.GetName(typeof(LogLevel), logLevel);
-            entry["Message"] = state.ToString();
-            entry["Timestamp"] = DateTime.UtcNow;
-            entry["CategoryName"] = m_CategoryName;
-            entry["Exception"] = exception == null ? (object)DBNull.Value : exception?.ToString();
+            //var entry = m_CurrentQueue.NewRow();
+            //entry["EventId"] = eventId.Id;
+            //entry["Type"] = Enum.GetName(typeof(LogLevel), logLevel);
+            //entry["Message"] = state.ToString();
+            //entry["Timestamp"] = DateTime.UtcNow;
+            //entry["CategoryName"] = m_CategoryName;
+            //entry["Exception"] = exception == null ? (object)DBNull.Value : exception?.ToString();
 
+            object[] args = new object[columnCount];
+            args[0] = eventId.Id;
+            args[1] = Enum.GetName(typeof(LogLevel), logLevel);
+            args[2] = state.ToString();
+            args[3] = DateTime.UtcNow;
+            args[4] = m_CategoryName;
+            args[5] = exception == null ? (object)DBNull.Value : exception.ToString();
+
+            int actualColumn = staticColumnCount - 1;
+            
             foreach (var item in scopeValues)
             {
-                entry[item.Key] = item.Value;
+                args[item.Key] = item.Value;
             }
 
-            m_CurrentQueue.Rows.Add(entry);
+            CurrentList.Add(args);
+            //m_CurrentQueue.Rows.Add(entry);
 
-            if (m_CurrentQueue.Rows.Count >= m_BatchSize)
+            //if (m_CurrentQueue.Rows.Count >= m_BatchSize)
+            //    WriteToDbAsync().Start();
+
+            if (CurrentList.Count >= m_BatchSize)
                 WriteToDbAsync().Start();
         }
 
         private async Task WriteToDbAsync()
         {
+            var listToWrite = m_CurrentQueue;
+
+
             string connection = m_Settings.ConnectionString;
-            SqlConnection con = new SqlConnection(connection);
-            //create object of SqlBulkCopy which help to insert  
-            SqlBulkCopy objbulk = new SqlBulkCopy(con);
+            using (SqlConnection con = new SqlConnection(connection))
+            {
+                //create object of SqlBulkCopy which help to insert  
+                using (SqlBulkCopy objbulk = new SqlBulkCopy(con))
+                {
 
-            //assign Destination table name  
-            objbulk.DestinationTableName = "SqlLog";
+                    //assign Destination table name  
+                    objbulk.DestinationTableName = m_Settings.TableName;
 
-            objbulk.ColumnMappings.Add("EventId", "EventId");
-            objbulk.ColumnMappings.Add("Type", "Type");
-            objbulk.ColumnMappings.Add("Scope", "Scope");
-            objbulk.ColumnMappings.Add("Message", "Message");
-            objbulk.ColumnMappings.Add("Exception", "Exception");
-            objbulk.ColumnMappings.Add("TimeStamp", "TimeStamp");
-            objbulk.ColumnMappings.Add("CategoryName", "CategoryName");
-            objbulk.ColumnMappings.Add("RequestId", "RequestId");
-            con.Open();
+                    
+                    objbulk.ColumnMappings.Add("0", "EventId");
+                    objbulk.ColumnMappings.Add("Type", "Type");
+                    objbulk.ColumnMappings.Add("Scope", "Scope");
+                    objbulk.ColumnMappings.Add("Message", "Message");
+                    objbulk.ColumnMappings.Add("Exception", "Exception");
+                    objbulk.ColumnMappings.Add("TimeStamp", "TimeStamp");
 
-            //insert bulk Records into DataBase.  
-            await objbulk.WriteToServerAsync(m_CurrentQueue);
-            con.Close();
+                    objbulk.ColumnMappings.Add("CategoryName", "CategoryName");
+                    
+                    // TODO: For Additionals Use BaseColumnscount + Addititonals
+                    objbulk.ColumnMappings.Add("RequestId", "RequestId");
+                    con.Open();
 
-        } 
+                    
+                    /// TODO: Replace hardcoded mapping with cfg.
+
+                    //insert bulk Records into DataBase.  
+                    await objbulk.WriteToServerAsync(m_CurrentQueue);
+                }
+            }
+        }
 
         public async Task RunAsync()
         {

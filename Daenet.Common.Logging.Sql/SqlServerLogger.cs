@@ -21,9 +21,27 @@ namespace Daenet.Common.Logging.Sql
         private ISqlServerLoggerSettings m_Settings;
         private Func<string, LogLevel, bool> m_Filter;
         private string m_CategoryName;
-        private SqlBatchLogTask m_CurrentLogTask;
 
-        public Func<LogLevel, EventId, object, Exception, SqlCommand> SqlCommandFormatter { get; set; }
+
+        private static SqlBatchLogTask currentLogTaskInstance = null;
+        private static readonly object padlock = new object();
+
+        private SqlBatchLogTask m_CurrentLogTask
+        {
+            get
+            {
+                lock (padlock)
+                {
+                    if (currentLogTaskInstance == null)
+                    {
+                        currentLogTaskInstance = new SqlBatchLogTask(m_Settings);
+                    }
+                    return currentLogTaskInstance;
+                }
+            }
+        }
+
+    public Func<LogLevel, EventId, object, Exception, SqlCommand> SqlCommandFormatter { get; set; }
 
         #region Public Methods
 
@@ -82,19 +100,15 @@ namespace Daenet.Common.Logging.Sql
 
             if (!IsEnabled(logLevel))
                 return;
+
+            // TODO: Evaluate what do to with the formatted ecxeption.
+            // Only needed if exception != NULL? Or use very time?
+            if (exceptionFormatter != null)
+            {
+                var formattedException = exceptionFormatter(state, exception);
+            }
+
             m_CurrentLogTask.Push(logLevel, eventId, state, exception);
-            //if(m_Settings.)
-            //Task.Run(() =>
-            //{
-            //    using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
-            //    {
-            //        conn.Open();
-            //        SqlCommand cmd = SqlCommandFormatter(logLevel, eventId, state, exception);
-            //        cmd.Connection = conn;
-            //        cmd.ExecuteNonQuery();
-            //        conn.Close();ev
-            //    }
-            //});
         }
 
 

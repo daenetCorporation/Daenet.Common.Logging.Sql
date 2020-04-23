@@ -57,6 +57,11 @@ namespace Daenet.Common.Logging.Sql
         /// </summary>
         string ScopeSeparator { get; set; }
 
+        /// <summary>
+        /// Defines the size of the buffer. When buffer is full we write all messages to db.
+        /// </summary>
+        int BatchSize { get; set; }
+
         IList<KeyValuePair<string, string>> ScopeColumnMapping { get; }
         #endregion
     }
