@@ -82,7 +82,6 @@ namespace Daenet.Common.Logging.Sql
                                 if (!String.IsNullOrEmpty(map.Key))
                                 {
                                     dictionary[settings.ScopeColumnMapping.IndexOf(map)] = item.Value.ToString();
-                                    //dictionary.Add(map.Value, item.Value.ToString());
                                 }
                             }
                         }
