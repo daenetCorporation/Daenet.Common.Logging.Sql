@@ -18,7 +18,7 @@ namespace Daenet.Common.Logging.Sql
         }
 
         public SqlServerLoggerScope Parent { get; private set; }
-        public Dictionary<string, string> ScopeInformation { get; set; }
+        public string[] ScopeInformation { get; set; }
 
         private static AsyncLocal<SqlServerLoggerScope> _value = new AsyncLocal<SqlServerLoggerScope>();
         public static SqlServerLoggerScope Current
@@ -55,14 +55,14 @@ namespace Daenet.Common.Logging.Sql
             return _state?.ToString();
         }
 
-        internal Dictionary<string, string> GetScopeInformation(ISqlServerLoggerSettings settings)
+        internal string[] GetScopeInformation(ISqlServerLoggerSettings settings)
         {
             if (settings.ScopeColumnMapping != null || settings.ScopeColumnMapping.Count > 0)
             {
-                Dictionary<string, string> dictionary;
+                string[] dictionary;
                 if (ScopeInformation == null)
                 {
-                    dictionary = new Dictionary<string, string>();
+                    dictionary = new string[settings.ScopeColumnMapping.Count()];
                     var builder = new StringBuilder();
                     var current = this;
                     var scopeLog = string.Empty;
@@ -77,10 +77,12 @@ namespace Daenet.Common.Logging.Sql
                         {
                             foreach (var item in (IEnumerable<KeyValuePair<string, object>>)current.CurrentValue)
                             {
+                                // TODO: For performance reasons we need to remove FirstOrDefault and additional IndexOf call and use only one call.
                                 var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
                                 if (!String.IsNullOrEmpty(map.Key))
                                 {
-                                    dictionary.Add(map.Value, item.Value.ToString());
+                                    dictionary[settings.ScopeColumnMapping.IndexOf(map)] = item.Value.ToString();
+                                    //dictionary.Add(map.Value, item.Value.ToString());
                                 }
                             }
                         }
@@ -100,9 +102,12 @@ namespace Daenet.Common.Logging.Sql
                         current = current.Parent;
                     }
                     if (addScopePath)
-                        dictionary.Add("Scope", builder.ToString());
-                  
-                    this.ScopeInformation = new Dictionary<string, string>(dictionary);
+                    {
+                        var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == "SCOPEPATH");
+                        dictionary[settings.ScopeColumnMapping.IndexOf(map)] = builder.ToString();
+                    }
+
+                    this.ScopeInformation = dictionary.ToArray();
                 }
                 else
                 {
@@ -110,7 +115,7 @@ namespace Daenet.Common.Logging.Sql
                 }
             }
             else
-                ScopeInformation = new Dictionary<string, string>();
+                ScopeInformation = new string[settings.ScopeColumnMapping.Count()];
 
             return ScopeInformation;
         }

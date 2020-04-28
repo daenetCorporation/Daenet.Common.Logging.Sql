@@ -1,32 +1,55 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Daenet.Common.Logging.Sql
 {
     class CustomDataReader : IDataReader
     {
+        private IEnumerator<object[]> enumerator = null;
+
+        private readonly List<object[]> data;
+
+        public CustomDataReader(List<object[]> data)
+        {
+            this.enumerator = data.GetEnumerator();
+            this.data = data;
+        }
+
         public object this[int i] => throw new NotImplementedException();
 
         public object this[string name] => throw new NotImplementedException();
 
-        public int Depth => throw new NotImplementedException();
+        public int Depth => throw new NotImplementedException(); // Not needed
 
         public bool IsClosed => throw new NotImplementedException();
 
         public int RecordsAffected => throw new NotImplementedException();
 
-        public int FieldCount => throw new NotImplementedException();
+        public int FieldCount
+        {
+            get
+            {
+                if (enumerator.Current != null)
+                {
+                    return enumerator.Current.Length;
+}
+                else
+                    return data.First().Length;
+            }
+        }
 
         public void Close()
         {
-            throw new NotImplementedException();
+            this.Dispose();
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            enumerator.Dispose();
         }
 
         public bool GetBoolean(int i)
@@ -116,7 +139,7 @@ namespace Daenet.Common.Logging.Sql
 
         public int GetOrdinal(string name)
         {
-            throw new NotImplementedException();
+            return Int32.Parse(name);
         }
 
         public DataTable GetSchemaTable()
@@ -131,7 +154,7 @@ namespace Daenet.Common.Logging.Sql
 
         public object GetValue(int i)
         {
-            throw new NotImplementedException();
+            return enumerator.Current[i];
         }
 
         public int GetValues(object[] values)
@@ -151,7 +174,7 @@ namespace Daenet.Common.Logging.Sql
 
         public bool Read()
         {
-            throw new NotImplementedException();
+            return enumerator.MoveNext();
         }
     }
 }

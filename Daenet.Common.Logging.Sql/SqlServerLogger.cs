@@ -108,7 +108,7 @@ namespace Daenet.Common.Logging.Sql
                 var formattedException = exceptionFormatter(state, exception);
             }
 
-            m_CurrentLogTask.Push(logLevel, eventId, state, exception);
+            m_CurrentLogTask.Push(logLevel, eventId, state, exception, m_CategoryName);
         }
 
 
@@ -156,27 +156,27 @@ namespace Daenet.Common.Logging.Sql
         /// <returns>SQL command to be inserted in SQL server</returns>
         private SqlCommand defaultSqlCmdFormatter(LogLevel logLevel, EventId eventId, object state, Exception exception)
         {
-            Dictionary<string, string> scopeValues;
-            if (SqlServerLoggerScope.Current != null)
-                scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
-            else
-                scopeValues = new Dictionary<string, string>();
+            //Dictionary<string, string> scopeValues;
+            //if (SqlServerLoggerScope.Current != null)
+            //    scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
+            //else
+            //    scopeValues = new Dictionary<string, string>();
             SqlCommand cmd = new SqlCommand();
 
-            cmd.Parameters.Add(new SqlParameter("@EventId", eventId.Id));
-            cmd.Parameters.Add(new SqlParameter("@Type", Enum.GetName(typeof(Microsoft.Extensions.Logging.LogLevel), logLevel)));
-            cmd.Parameters.Add(new SqlParameter("@Message", state.ToString()));
-            cmd.Parameters.Add(new SqlParameter("@Timestamp", DateTime.UtcNow));
-            cmd.Parameters.Add(new SqlParameter("@CategoryName", m_CategoryName));
-            cmd.Parameters.Add(new SqlParameter("@Exception", exception == null ? (object)DBNull.Value : exception?.ToString()));
+            //cmd.Parameters.Add(new SqlParameter("@EventId", eventId.Id));
+            //cmd.Parameters.Add(new SqlParameter("@Type", Enum.GetName(typeof(Microsoft.Extensions.Logging.LogLevel), logLevel)));
+            //cmd.Parameters.Add(new SqlParameter("@Message", state.ToString()));
+            //cmd.Parameters.Add(new SqlParameter("@Timestamp", DateTime.UtcNow));
+            //cmd.Parameters.Add(new SqlParameter("@CategoryName", m_CategoryName));
+            //cmd.Parameters.Add(new SqlParameter("@Exception", exception == null ? (object)DBNull.Value : exception?.ToString()));
 
-            foreach (var item in scopeValues)
-            {
-                cmd.Parameters.Add(new SqlParameter(item.Key, item.Value));
-            }
+            //foreach (var item in scopeValues)
+            //{
+            //    cmd.Parameters.Add(new SqlParameter(item.Key, item.Value));
+            //}
 
-            cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (EventId, Type, Message, Timestamp, Exception, CategoryName {string.Join("", scopeValues.Select(a => "," + a.Key))}) " +
-                $"VALUES ( @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {string.Join("", scopeValues.Select(a => ",@" + a.Key))})";
+            //cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (EventId, Type, Message, Timestamp, Exception, CategoryName {string.Join("", scopeValues.Select(a => "," + a.Key))}) " +
+            //    $"VALUES ( @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {string.Join("", scopeValues.Select(a => ",@" + a.Key))})";
 
             return cmd;
         }
