@@ -41,11 +41,11 @@ namespace Daenet.Common.Logging.Sql
             }
         }
 
-    public Func<LogLevel, EventId, object, Exception, SqlCommand> SqlCommandFormatter { get; set; }
+//    public Func<LogLevel, EventId, object, Exception, SqlCommand> SqlCommandFormatter { get; set; }
 
         #region Public Methods
 
-        public SqlServerLogger(ISqlServerLoggerSettings settings, string categoryName, Func<string, LogLevel, bool> filter = null, Func<LogLevel, EventId, object, Exception, SqlCommand> eventDataFormatter = null)
+        public SqlServerLogger(ISqlServerLoggerSettings settings, string categoryName, Func<string, LogLevel, bool> filter = null)
         {
             try
             {
@@ -62,20 +62,21 @@ namespace Daenet.Common.Logging.Sql
 
                 m_IgnoreLoggingErrors = settings.IgnoreLoggingErrors;
 
-                using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
-                {
-                    conn.Open();
-                    SqlCommandFormatter = SqlCommandFormatter == null ? defaultSqlCmdFormatter : eventDataFormatter;
+                // TODO: Remove code for creating the table if useless.
+                //using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
+                //{
+                //    conn.Open();
+                //    SqlCommandFormatter = SqlCommandFormatter == null ? defaultSqlCmdFormatter : eventDataFormatter;
 
-                    if (!tableExists(conn))
-                    {
-                        if (!m_Settings.CreateTblIfNotExist)
-                            handleError(new Exception("No table exists. You can enable automatic table creation by setting 'CreateTblIfNotExist' to true"));
-                        else
-                            createSqlTable(conn);
-                    }
-                    conn.Close();
-                }
+                //    if (!tableExists(conn))
+                //    {
+                //        if (!m_Settings.CreateTblIfNotExist)
+                //            handleError(new Exception("No table exists. You can enable automatic table creation by setting 'CreateTblIfNotExist' to true"));
+                //        else
+                //            createSqlTable(conn);
+                //    }
+                //    conn.Close();
+                //}
             }
             catch (Exception ex)
             {
@@ -95,18 +96,15 @@ namespace Daenet.Common.Logging.Sql
         /// <param name="exceptionFormatter"></param>
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> exceptionFormatter)
         {
-
-            //var stateDictionary = state as IReadOnlyList<KeyValuePair<string, object>>;
-
             if (!IsEnabled(logLevel))
                 return;
 
             // TODO: Evaluate what do to with the formatted ecxeption.
             // Only needed if exception != NULL? Or use very time?
-            if (exceptionFormatter != null)
-            {
-                var formattedException = exceptionFormatter(state, exception);
-            }
+            //if (exceptionFormatter != null)
+            //{
+            //    var formattedException = exceptionFormatter(state, exception);
+            //}
 
             m_CurrentLogTask.Push(logLevel, eventId, state, exception, m_CategoryName);
         }
@@ -124,7 +122,6 @@ namespace Daenet.Common.Logging.Sql
             {
                 throw new ArgumentNullException(nameof(state));
             }
-
 
             return SqlServerLoggerScope.Push("SqlServerLogger", state);
         }
@@ -145,85 +142,6 @@ namespace Daenet.Common.Logging.Sql
         #endregion
 
         #region Private Methods
-
-        /// <summary>
-        /// Implements default formatter for event data, which will be sent to SQL Server.
-        /// </summary>
-        /// <param name="logLevel">Logging severity levels</param>
-        /// <param name="eventId">Event id of the log</param>
-        /// <param name="message">Log message</param>
-        /// <param name="exception">Exception in case of error</param>
-        /// <returns>SQL command to be inserted in SQL server</returns>
-        private SqlCommand defaultSqlCmdFormatter(LogLevel logLevel, EventId eventId, object state, Exception exception)
-        {
-            //Dictionary<string, string> scopeValues;
-            //if (SqlServerLoggerScope.Current != null)
-            //    scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
-            //else
-            //    scopeValues = new Dictionary<string, string>();
-            SqlCommand cmd = new SqlCommand();
-
-            //cmd.Parameters.Add(new SqlParameter("@EventId", eventId.Id));
-            //cmd.Parameters.Add(new SqlParameter("@Type", Enum.GetName(typeof(Microsoft.Extensions.Logging.LogLevel), logLevel)));
-            //cmd.Parameters.Add(new SqlParameter("@Message", state.ToString()));
-            //cmd.Parameters.Add(new SqlParameter("@Timestamp", DateTime.UtcNow));
-            //cmd.Parameters.Add(new SqlParameter("@CategoryName", m_CategoryName));
-            //cmd.Parameters.Add(new SqlParameter("@Exception", exception == null ? (object)DBNull.Value : exception?.ToString()));
-
-            //foreach (var item in scopeValues)
-            //{
-            //    cmd.Parameters.Add(new SqlParameter(item.Key, item.Value));
-            //}
-
-            //cmd.CommandText = $"INSERT INTO {m_Settings.TableName} (EventId, Type, Message, Timestamp, Exception, CategoryName {string.Join("", scopeValues.Select(a => "," + a.Key))}) " +
-            //    $"VALUES ( @EventId, @Type, @Message, @Timestamp, @Exception, @CategoryName {string.Join("", scopeValues.Select(a => ",@" + a.Key))})";
-
-            return cmd;
-        }
-
-
-        /// <summary>
-        /// Checks if the Table Exists
-        /// </summary>
-        /// <returns>Returns true if table exists in database</returns>
-        private bool tableExists(SqlConnection conn)
-        {
-            try
-            {
-                string cmdStr = $"IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='{m_Settings.TableName}') SELECT 1 ELSE SELECT 0";
-                SqlCommand cmd = new SqlCommand(cmdStr, conn);
-                int tblExt = Convert.ToInt32(cmd.ExecuteScalar());
-                if (tblExt == 1)
-                    return true;
-                else
-                    return false;
-
-            }
-            catch (Exception ex)
-            {
-                handleError(ex);
-
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Creates SQL table in database with the table name that is provided in the settings
-        /// </summary>
-        private void createSqlTable(SqlConnection conn)
-        {
-            try
-            {
-                string cmdStr = $"CREATE TABLE {m_Settings.TableName}(Id bigint IDENTITY(1,1) NOT NULL, EventId int NULL, Type nvarchar(12) NOT NULL, Scope nvarchar(max) NULL, Message nvarchar(max) NOT NULL, Exception nvarchar(max) NULL, TimeStamp datetime NOT NULL, CategoryName nvarchar(max) NULL, CONSTRAINT PK_{m_Settings.TableName} PRIMARY KEY CLUSTERED (Id ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON))";
-                using (SqlCommand cmd = new SqlCommand(cmdStr, conn))
-                    cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                handleError(ex);
-            }
-        }
-
 
         //TODO: Please test ignore errors if logging fails. See IgnoreLoggingErrors.
         private void handleError(Exception ex)

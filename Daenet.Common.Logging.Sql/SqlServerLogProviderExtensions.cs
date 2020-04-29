@@ -136,6 +136,9 @@ namespace Daenet.Common.Logging.Sql
             settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
             settings.ScopeSeparator = sqlServerSection.GetValue<string>("ScopeSeparator");
 
+            settings.BatchSize = sqlServerSection.GetValue<int>("BatchSize");
+            settings.InsertTimerInSec = sqlServerSection.GetValue<int>("InsertTimerInSec");
+
             var columnsMapping = sqlServerSection.GetSection("ScopeColumnMapping");
             if (columnsMapping != null)
             {

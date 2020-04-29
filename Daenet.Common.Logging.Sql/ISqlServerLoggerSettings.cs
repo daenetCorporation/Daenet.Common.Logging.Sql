@@ -16,6 +16,12 @@ namespace Daenet.Common.Logging.Sql
         IDictionary<string, LogLevel> Switches { get; set; }
 
         /// <summary>
+        /// Timer after all messages in Current Queue will be inserted to database.
+        /// No matter if <see cref="BatchSize"/> is reached.
+        /// </summary>
+        int InsertTimerInSec { get; set; }
+
+        /// <summary>
         /// Flag if scopes should be included.
         /// </summary>
         bool IncludeScopes { get; }

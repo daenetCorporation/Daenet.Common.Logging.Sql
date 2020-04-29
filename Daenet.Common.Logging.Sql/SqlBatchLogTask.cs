@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Daenet.Common.Logging.Sql
@@ -12,26 +13,46 @@ namespace Daenet.Common.Logging.Sql
     internal class SqlBatchLogTask
     {
         private ISqlServerLoggerSettings m_Settings;
-        private DataTable m_CurrentQueue;
         private int m_BatchSize;
         private const int staticColumnCount = 6; // EventId, Type, Message, TimeStamp, CategoryName, Exception = 6
-        private int columnCount;
+        private int _columnCount;
         List<object[]> CurrentList = new List<object[]>();
+        private Task _insertTimerTask;
+        private List<SqlBulkCopyColumnMapping> _sqlBulkCopyColumnMappingList;
 
         private readonly object lockObject = new object();
-
 
         public SqlBatchLogTask(ISqlServerLoggerSettings settings)
         {
             m_Settings = settings;
             m_BatchSize = Convert.ToInt32(m_Settings.BatchSize);
 
-            m_CurrentQueue = new DataTable();
+            _columnCount = staticColumnCount + m_Settings.ScopeColumnMapping.Count();
 
-            columnCount = staticColumnCount + m_Settings.ScopeColumnMapping.Count();
+            buildColumnMapping();
+
+            RunInsertTimer();
         }
 
-        public static SqlBatchLogTask Current { get; set; }
+        private void buildColumnMapping()
+        {
+            _sqlBulkCopyColumnMappingList = new List<SqlBulkCopyColumnMapping>();
+
+            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("0", "EventId"));
+            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("1", "Type"));
+            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("2", "Message"));
+            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("3", "TimeStamp"));
+            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("4", "CategoryName"));
+            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("5", "Exception"));
+
+            int actualColumn = staticColumnCount;
+
+            foreach (var mapping in m_Settings.ScopeColumnMapping)
+            {
+                _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping(actualColumn.ToString(), mapping.Value));
+                actualColumn++;
+            }
+        }
 
         public void Push<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, string categoryName)
         {
@@ -40,15 +61,8 @@ namespace Daenet.Common.Logging.Sql
                 scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
             else
                 scopeValues = new string[m_Settings.ScopeColumnMapping.Count()];
-            //var entry = m_CurrentQueue.NewRow();
-            //entry["EventId"] = eventId.Id;
-            //entry["Type"] = Enum.GetName(typeof(LogLevel), logLevel);
-            //entry["Message"] = state.ToString();
-            //entry["Timestamp"] = DateTime.UtcNow;
-            //entry["CategoryName"] = m_CategoryName;
-            //entry["Exception"] = exception == null ? (object)DBNull.Value : exception?.ToString();
 
-            object[] args = new object[columnCount];
+            object[] args = new object[_columnCount];
             args[0] = eventId.Id; // EventId
             args[1] = Enum.GetName(typeof(LogLevel), logLevel); // Type
             args[2] = state.ToString(); // Message
@@ -64,86 +78,84 @@ namespace Daenet.Common.Logging.Sql
                 actualColumn++;
             }
 
-            //foreach (var mapping in m_Settings.ScopeColumnMapping)
-            //{
-            //    args[actualColumn] = scopeValues[;
-            //    actualColumn++;
-            //}
-
-            //foreach (var item in scopeValues)
-            //{
-            //    args[item.Key] = item.Value;
-            //}
-
             lock (lockObject)
             {
                 CurrentList.Add(args);
             }
 
-            //m_CurrentQueue.Rows.Add(entry);
-
-            //if (m_CurrentQueue.Rows.Count >= m_BatchSize)
-            //    WriteToDbAsync().Start();
-
             if (CurrentList.Count >= m_BatchSize)
-                WriteToDbAsync().Wait();
+                WriteToDbAsync();
         }
 
-        private async Task WriteToDbAsync()
+        private void WriteToDbAsync()
         {
+
+
             List<object[]> listToWrite;
+
             lock (lockObject)
             {
+                // Don't do anything is list is empty.
+                if (CurrentList.Count == 0)
+                    return;
+
                 listToWrite = CurrentList;
                 CurrentList = new List<object[]>();
             }
 
-            string connection = m_Settings.ConnectionString;
-            using (SqlConnection con = new SqlConnection(connection))
+            try
             {
-                //create object of SqlBulkCopy which help to insert  
-                using (SqlBulkCopy objbulk = new SqlBulkCopy(con))
+                using (SqlConnection con = new SqlConnection(m_Settings.ConnectionString))
                 {
-
-                    CustomDataReader customDataReader = new CustomDataReader(listToWrite);
-                    //assign Destination table name  
-                    objbulk.DestinationTableName = m_Settings.TableName;
-
-                    
-                    objbulk.ColumnMappings.Add("0", "EventId");
-                    objbulk.ColumnMappings.Add("1", "Type");
-                    objbulk.ColumnMappings.Add("2", "Message");
-                    objbulk.ColumnMappings.Add("3", "TimeStamp");
-                    objbulk.ColumnMappings.Add("4", "CategoryName");
-                    objbulk.ColumnMappings.Add("5", "Exception");
-
-                    int actualColumn = staticColumnCount;
-
-                    foreach (var mapping in m_Settings.ScopeColumnMapping)
+                    //create object of SqlBulkCopy which help to insert  
+                    using (SqlBulkCopy objbulk = new SqlBulkCopy(con))
                     {
-                        objbulk.ColumnMappings.Add(actualColumn.ToString(), mapping.Value);
-                        actualColumn++;
+                        CustomDataReader customDataReader = new CustomDataReader(listToWrite);
+                        objbulk.DestinationTableName = m_Settings.TableName;
+
+                        foreach (var mapping in _sqlBulkCopyColumnMappingList)
+                        {
+                            objbulk.ColumnMappings.Add(mapping);
+                        }
+
+                        con.Open();
+
+                        //insert bulk Records into DataBase.  
+                        objbulk.WriteToServer(customDataReader);
                     }
-
-                    // TODO: For Additionals Use BaseColumnscount + Addititonals
-                    //objbulk.ColumnMappings.Add("RequestId", "RequestId");
-                    con.Open();
-
-
-                    /// TODO: Replace hardcoded mapping with cfg.
-
-                    //insert bulk Records into DataBase.  
-                    await objbulk.WriteToServerAsync(customDataReader);
                 }
+            }
+            catch (InvalidOperationException invalidEx)
+            {
+                if (invalidEx.Message == "The given ColumnMapping does not match up with any column in the source or destination.")
+                {
+                    throw new Exception($"Missing/Invalid table columns. Required columns: {String.Join(",", _sqlBulkCopyColumnMappingList.Select(d => d.DestinationColumn))}", invalidEx);
+                }
+                else
+                    throw;
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
 
-        public async Task RunAsync()
+        private void RunInsertTimer()
         {
-            while (true)
-            {
+            if (m_Settings.InsertTimerInSec == 0 || m_Settings.BatchSize == 0)
+                return;
 
-            }
+            _insertTimerTask = new Task(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(m_Settings.InsertTimerInSec));
+
+                    WriteToDbAsync();
+                }
+            });
+
+            _insertTimerTask.Start();
         }
     }
 }

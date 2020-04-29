@@ -24,9 +24,9 @@ namespace Daenet.Common.Logging.Sql
         public string ScopeSeparator { get; set; }
 
         public IList<KeyValuePair<string, string>> ScopeColumnMapping { get; set; } = new List<KeyValuePair<string, string>>();
-        /// <summary>
-        /// Defines the size of the buffer. When buffer is full we write all messages to db.
-        /// </summary>
+
         public int BatchSize { get; set; }
+
+        public int InsertTimerInSec { get; set; }
     }
 }
