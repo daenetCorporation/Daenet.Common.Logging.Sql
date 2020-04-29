@@ -19,15 +19,19 @@ namespace Daenet.Common.Logging.Sql
             this.data = data;
         }
 
+        #region Not needed Properties
+
         public object this[int i] => throw new NotImplementedException();
 
         public object this[string name] => throw new NotImplementedException();
 
-        public int Depth => throw new NotImplementedException(); // Not needed
+        public int Depth => throw new NotImplementedException();
 
         public bool IsClosed => throw new NotImplementedException();
 
         public int RecordsAffected => throw new NotImplementedException();
+
+        #endregion
 
         public int FieldCount
         {
@@ -36,7 +40,7 @@ namespace Daenet.Common.Logging.Sql
                 if (enumerator.Current != null)
                 {
                     return enumerator.Current.Length;
-}
+                }
                 else
                     return data.First().Length;
             }
@@ -51,6 +55,23 @@ namespace Daenet.Common.Logging.Sql
         {
             enumerator.Dispose();
         }
+
+        public bool Read()
+        {
+            return enumerator.MoveNext();
+        }
+
+        public object GetValue(int i)
+        {
+            return enumerator.Current[i];
+        }
+
+        public int GetOrdinal(string name)
+        {
+            return Int32.Parse(name);
+        }
+
+        #region Not needed Methods
 
         public bool GetBoolean(int i)
         {
@@ -137,10 +158,6 @@ namespace Daenet.Common.Logging.Sql
             throw new NotImplementedException();
         }
 
-        public int GetOrdinal(string name)
-        {
-            return Int32.Parse(name);
-        }
 
         public DataTable GetSchemaTable()
         {
@@ -150,11 +167,6 @@ namespace Daenet.Common.Logging.Sql
         public string GetString(int i)
         {
             throw new NotImplementedException();
-        }
-
-        public object GetValue(int i)
-        {
-            return enumerator.Current[i];
         }
 
         public int GetValues(object[] values)
@@ -172,9 +184,6 @@ namespace Daenet.Common.Logging.Sql
             throw new NotImplementedException();
         }
 
-        public bool Read()
-        {
-            return enumerator.MoveNext();
-        }
+        #endregion
     }
 }
