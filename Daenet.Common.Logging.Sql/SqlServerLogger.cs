@@ -61,22 +61,6 @@ namespace Daenet.Common.Logging.Sql
                     m_Filter = filter;
 
                 m_IgnoreLoggingErrors = settings.IgnoreLoggingErrors;
-
-                // TODO: Remove code for creating the table if useless.
-                //using (SqlConnection conn = new SqlConnection(m_Settings.ConnectionString))
-                //{
-                //    conn.Open();
-                //    SqlCommandFormatter = SqlCommandFormatter == null ? defaultSqlCmdFormatter : eventDataFormatter;
-
-                //    if (!tableExists(conn))
-                //    {
-                //        if (!m_Settings.CreateTblIfNotExist)
-                //            handleError(new Exception("No table exists. You can enable automatic table creation by setting 'CreateTblIfNotExist' to true"));
-                //        else
-                //            createSqlTable(conn);
-                //    }
-                //    conn.Close();
-                //}
             }
             catch (Exception ex)
             {

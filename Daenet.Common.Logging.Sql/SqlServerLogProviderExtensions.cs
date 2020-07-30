@@ -112,7 +112,6 @@ namespace Daenet.Common.Logging.Sql
             if (String.IsNullOrEmpty(settings.TableName))
                 throw new ArgumentException("SqlProvider:TableName is Null or Empty!", nameof(settings.TableName));
 
-            settings.CreateTblIfNotExist = sqlServerSection.GetValue<bool>("CreateTblIfNotExist");
             settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
             settings.ScopeSeparator = sqlServerSection.GetValue<string>("ScopeSeparator");
 
@@ -127,7 +126,6 @@ namespace Daenet.Common.Logging.Sql
                     settings.ScopeColumnMapping.Add(new KeyValuePair<string, string>(item.Key, item.Value));
                 }
             }
-
         }
     }
 }

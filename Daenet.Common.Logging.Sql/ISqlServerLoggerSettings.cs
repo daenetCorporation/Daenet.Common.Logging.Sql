@@ -49,12 +49,8 @@ namespace Daenet.Common.Logging.Sql
         //RetryPolicy RetryPolicy { get; set; }
 
         /// <summary>
-        /// Flag to know if table can be created automatically when there exists no table
-        /// </summary>
-        bool CreateTblIfNotExist { get; set; }
-
-        /// <summary>
         /// Flag if Logger should throw an exception if logging fails.
+        /// ONLY WORKS IF BATCHSIZE = 1
         /// </summary>
         bool IgnoreLoggingErrors { get; }
 

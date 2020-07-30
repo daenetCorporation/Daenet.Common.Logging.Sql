@@ -17,8 +17,6 @@ namespace Daenet.Common.Logging.Sql
 
         public string TableName { get; set; }
 
-        public bool CreateTblIfNotExist { get; set; }
-
         public bool IgnoreLoggingErrors { get; set; }
 
         public string ScopeSeparator { get; set; }
