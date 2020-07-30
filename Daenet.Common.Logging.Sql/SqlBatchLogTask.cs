@@ -84,18 +84,16 @@ namespace Daenet.Common.Logging.Sql
             }
 
             if (CurrentList.Count >= m_BatchSize)
-                WriteToDbAsync();
+                _= WriteToDbAsync();
         }
 
-        private void WriteToDbAsync()
+        private async Task WriteToDbAsync()
         {
-
-
             List<object[]> listToWrite;
 
             lock (lockObject)
             {
-                // Don't do anything is list is empty.
+                // Don't do anything if list is empty.
                 if (CurrentList.Count == 0)
                     return;
 
@@ -120,8 +118,10 @@ namespace Daenet.Common.Logging.Sql
 
                         con.Open();
 
-                        //insert bulk Records into DataBase.  
-                        objbulk.WriteToServer(customDataReader);
+                        if (m_BatchSize < 1) // use sync method if BatchSize is < 1
+                            objbulk.WriteToServer(customDataReader);
+                        else // use async methodd
+                            await objbulk.WriteToServerAsync(customDataReader);
                     }
                 }
             }
@@ -151,7 +151,7 @@ namespace Daenet.Common.Logging.Sql
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(m_Settings.InsertTimerInSec));
 
-                    WriteToDbAsync();
+                    _= WriteToDbAsync(); // Just assign it.
                 }
             });
 
