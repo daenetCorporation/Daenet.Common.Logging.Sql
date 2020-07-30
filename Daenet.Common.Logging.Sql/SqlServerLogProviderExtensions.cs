@@ -9,10 +9,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Daenet.Common.Logging.Sql
 {
     /// <summary>
-    /// TODO: Comments on all publics
+    /// Extensions for working work ILogger and other interfaces.
     /// </summary>
     public static class SqlServerLogProviderExtensions
     {
+
+        private static string _SqlLoggerProviderCfgSectionName = (Attribute.GetCustomAttribute(typeof(SqlServerLogProvider), typeof (ProviderAliasAttribute)) as ProviderAliasAttribute).Alias;
 
         /// <summary>
         /// Adds a sql logger named 'SqlServerLogger' to the factory.
@@ -52,8 +54,7 @@ namespace Daenet.Common.Logging.Sql
         /// <returns></returns>        
         public static ILoggerFactory AddSqlServerLogger(this ILoggerFactory loggerFactory,
           ISqlServerLoggerSettings settings,
-          Func<string, LogLevel, bool> filter = null,
-          string scopeSeparator = null)
+          Func<string, LogLevel, bool> filter = null)
         {
             loggerFactory.AddProvider(new SqlServerLogProvider(settings, filter));
 
@@ -85,27 +86,6 @@ namespace Daenet.Common.Logging.Sql
             var settings = new SqlServerLoggerSettings();
             SetSqlServerLoggerSettings(settings, config);
             return settings;
-            /*            var settings = new SqlServerLoggerSettings();
-
-                        var sqlServerSection = config.GetSection("SqlProvider");
-
-                        settings.ConnectionString = sqlServerSection.GetValue<string>("ConnectionString");
-
-                        if (String.IsNullOrEmpty(settings.ConnectionString))
-                            throw new ArgumentException("SqlProvider:ConnectionString is Null or Empty!", nameof(settings.ConnectionString));
-
-                        settings.IncludeExceptionStackTrace = sqlServerSection.GetValue<bool>("IncludeExceptionStackTrace");
-
-                        settings.TableName = sqlServerSection.GetValue<string>("TableName");
-
-                        if (String.IsNullOrEmpty(settings.TableName))
-                            throw new ArgumentException("SqlProvider:TableName is Null or Empty!", nameof(settings.TableName));
-
-                        settings.CreateTblIfNotExist = sqlServerSection.GetValue<bool>("CreateTblIfNotExist");
-                        settings.IgnoreLoggingErrors = sqlServerSection.GetValue<bool>("IgnoreLoggingErrors");
-                        settings.ScopeSeparator = sqlServerSection.GetValue<string>("ScopeSeparator");
-
-                        return settings;*/
         }
 
         /// <summary>
@@ -118,7 +98,7 @@ namespace Daenet.Common.Logging.Sql
             if (settings == null)
                 settings = new SqlServerLoggerSettings();
 
-            var sqlServerSection = config.GetSection("SqlProviderSettings");
+            var sqlServerSection = config.GetSection(_SqlLoggerProviderCfgSectionName);
 
             settings.ConnectionString = sqlServerSection.GetValue<string>("ConnectionString");
 
