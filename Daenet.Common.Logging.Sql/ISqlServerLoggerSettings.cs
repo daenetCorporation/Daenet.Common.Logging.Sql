@@ -16,6 +16,12 @@ namespace Daenet.Common.Logging.Sql
         IDictionary<string, LogLevel> Switches { get; set; }
 
         /// <summary>
+        /// Timer after all messages in Current Queue will be inserted to database.
+        /// No matter if <see cref="BatchSize"/> is reached.
+        /// </summary>
+        int InsertTimerInSec { get; set; }
+
+        /// <summary>
         /// Flag if scopes should be included.
         /// </summary>
         bool IncludeScopes { get; }
@@ -43,12 +49,8 @@ namespace Daenet.Common.Logging.Sql
         //RetryPolicy RetryPolicy { get; set; }
 
         /// <summary>
-        /// Flag to know if table can be created automatically when there exists no table
-        /// </summary>
-        bool CreateTblIfNotExist { get; set; }
-
-        /// <summary>
         /// Flag if Logger should throw an exception if logging fails.
+        /// ONLY WORKS IF BATCHSIZE = 1
         /// </summary>
         bool IgnoreLoggingErrors { get; }
 
@@ -56,6 +58,13 @@ namespace Daenet.Common.Logging.Sql
         /// Character or text, which separetes scopes. I.E.: ' ', '/', '=>'
         /// </summary>
         string ScopeSeparator { get; set; }
+
+        /// <summary>
+        /// Defines the size of the buffer. When buffer is full we write all messages to db.
+        /// </summary>
+        int BatchSize { get; set; }
+
+        IList<KeyValuePair<string, string>> ScopeColumnMapping { get; }
         #endregion
     }
 }

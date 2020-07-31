@@ -17,10 +17,14 @@ namespace Daenet.Common.Logging.Sql
 
         public string TableName { get; set; }
 
-        public bool CreateTblIfNotExist { get; set; }
-
         public bool IgnoreLoggingErrors { get; set; }
 
         public string ScopeSeparator { get; set; }
+
+        public IList<KeyValuePair<string, string>> ScopeColumnMapping { get; set; } = new List<KeyValuePair<string, string>>();
+
+        public int BatchSize { get; set; }
+
+        public int InsertTimerInSec { get; set; }
     }
 }

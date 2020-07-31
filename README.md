@@ -43,15 +43,15 @@ public static IWebHost BuildWebHost(string[] args) =>
   ILogger logger = loggerFactory.CreateLogger<SqlServerLoggerTests>();
   ```
 
-In the ***appsettings.json***, the `SqlProviderSettings` part needs to be added.
+In the ***appsettings.json***, the `SqlProvider` part needs to be added to `Logging`.
 
 ```JSON
 {
   "Logging": {
-    "IncludeScopes": false,
+    "IncludeScopes": true,
     "Debug": {
       "LogLevel": {
-        "Default": "Warning"
+        "Default": "Information"
       }
     },
     "Console": {
@@ -61,15 +61,15 @@ In the ***appsettings.json***, the `SqlProviderSettings` part needs to be added.
     },
     "SqlProvider": {
       "LogLevel": {
-        "Default": "Error"
-      }
-    },
-    "SqlProviderSettings": {
-      "ConnectionString": "SQL database connection string",
-      "TableName": "Name of the table",
-      "CreateTblIfNotExist": false,
+        "Default": "Information"
+      },
+      "ConnectionString": "",
+      "TableName": "SqlLog",
+      "BatchSize": 1,
+      "InsertTimerInSec": 60,
       "IncludeExceptionStackTrace": false,
-      "IgnoreLoggingErrors": false
+      "IgnoreLoggingErrors": false,
+      "ScopeSeparator": "=>"
     }
   }
 }
@@ -88,19 +88,20 @@ Following example illustrates using scope in logging when *IncludeScopes* flag i
 ```
 This will add "Scope begins : *new hexadecimal guid*" for every object instance of the class where scope is began.
 
-***SqlProviderSettings*** section of the configuration contains SQL Logger specific configurations.
-
-
 *ConnectionString* is ADO.NET connection string for SQL authentication.
 
 *TableName* is name of the table where logger should log.
 
-*CreateTblIfNotExist* flag when set to true, gives the logger ability to create the table of table name that is provided in configuration in case it is not already available in database.
-This flag is useful while testing the logger in development environment.
+*BatchSize* Decides when to write messages to the database. If `BatchSize` > 1 then we fill a List and wait till list count reaches `BatchSize` or Insert to DB is triggered by  `InsertTimerInSec`. If BatchSize > 1 writing the data to db is async.
+
+*InsertTimerInSec* Time elapsed when logger writes to table even `BatchSize` isn't reached.
+
+(REMOVED in 1.0.7.2) ~~*CreateTblIfNotExist* flag when set to true, gives the logger ability to create the table of table name that is provided in configuration in case it is not already available in database.
+This flag is useful while testing the logger in development environment.~~
 
 *IncludeExceptionStackTrace* flag is currently not implemented and complete exception is logged in table regardless of this flag.
 
-*IgnoreLoggingErrors* flag is to decide if the exceptions of logger should be logged somewhere and ignored or should it be thrown further. When set to false, the errors occurring inside SQL logger are logged in another logger. are  At the moment this configuration is not implemented completely and when set to false, the logger at the moment logs these errors in debug console.
+*IgnoreLoggingErrors* flag is to decide if the application should fail if an exception occurs on logging. When set to false, the logger at the moment logs these errors in debug console. **WARNING: Only works if BatchSize = 1
 
 ### Database Configuration
 
@@ -123,7 +124,7 @@ CREATE TABLE [dbo].[YourTableName](
        [Id] [bigint] IDENTITY(1,1) NOT NULL,
        [EventId] [int] NULL,
        [Type] [nvarchar](15) NOT NULL,
-       [Scope] [nvarchar](255) NULL,
+       [Scope] [nvarchar](MAX) NULL,
        [Message] [nvarchar](max) NOT NULL,
        [Exception] [nvarchar](max) NULL,
        [TimeStamp] [datetime] NOT NULL,
@@ -134,6 +135,23 @@ CONSTRAINT [PK_YourTableName] PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 ```
+
+### Logging Parameters to database
+
+It's possible to log parameters to database, too.
+In this example we want to log the RequestId and the scope to the database.
+For this to work, you have to create the columns of course.
+
+This configuration has to be apppended to the `SqlProvider` section in `Logging`.
+
+Here is an example of how to log the 2 .NET Core internal logging parameters. You can extend this, with the parameters you use in your logging. A good example here is `{method}` for logging the method name in a general way.
+
+````JSON
+"ScopeColumnMapping": {
+        "RequestId": "RequestId",
+        "SCOPEPATH": "Scope"
+      }
+````
 
 ### Custom SQL Logging Format
 
