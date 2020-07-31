@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -84,10 +85,10 @@ namespace Daenet.Common.Logging.Sql
             }
 
             if (CurrentList.Count >= m_BatchSize)
-                _= WriteToDbAsync();
+                 WriteToDb();
         }
 
-        private async Task WriteToDbAsync()
+        private void WriteToDb()
         {
             List<object[]> listToWrite;
 
@@ -118,10 +119,10 @@ namespace Daenet.Common.Logging.Sql
 
                         con.Open();
 
-                        if (m_BatchSize < 1) // use sync method if BatchSize is < 1
+                        if (m_BatchSize <= 1) // use sync method if BatchSize is < 1
                             objbulk.WriteToServer(customDataReader);
                         else // use async methodd
-                            await objbulk.WriteToServerAsync(customDataReader);
+                            objbulk.WriteToServerAsync(customDataReader);
                     }
                 }
             }
@@ -129,14 +130,28 @@ namespace Daenet.Common.Logging.Sql
             {
                 if (invalidEx.Message == "The given ColumnMapping does not match up with any column in the source or destination.")
                 {
-                    throw new Exception($"Missing/Invalid table columns. Required columns: {String.Join(",", _sqlBulkCopyColumnMappingList.Select(d => d.DestinationColumn))}", invalidEx);
+
+                    handleError(new Exception($"Missing/Invalid table columns. Required columns: {String.Join(",", _sqlBulkCopyColumnMappingList.Select(d => d.DestinationColumn))}", invalidEx));
                 }
                 else
-                    throw;
+                    handleError(invalidEx);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                handleError(e);
+            }
+        }
+
+        private void handleError(Exception ex)
+        {
+            if (m_Settings.IgnoreLoggingErrors && m_BatchSize <= 1)
+            {
+                Debug.WriteLine($"Logging has failed. {ex}");
+            }
+            else
+            {
+                Debug.WriteLine($"Ignore Error is disabled and an Exception occured: {ex}");
+                throw new Exception("Ignore Error is disabled and an Exception occured.", ex);
             }
         }
 
@@ -151,7 +166,7 @@ namespace Daenet.Common.Logging.Sql
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(m_Settings.InsertTimerInSec));
 
-                    _= WriteToDbAsync(); // Just assign it.
+                    WriteToDb(); // Just assign it.
                 }
             });
 
