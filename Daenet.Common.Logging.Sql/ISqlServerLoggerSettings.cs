@@ -11,11 +11,6 @@ namespace Daenet.Common.Logging.Sql
         #region General SettingsILogger 
 
         /// <summary>
-        /// Defines the LogLevel for specific sources.
-        /// </summary>
-        IDictionary<string, LogLevel> Switches { get; set; }
-
-        /// <summary>
         /// Timer after all messages in Current Queue will be inserted to database.
         /// No matter if <see cref="BatchSize"/> is reached.
         /// </summary>

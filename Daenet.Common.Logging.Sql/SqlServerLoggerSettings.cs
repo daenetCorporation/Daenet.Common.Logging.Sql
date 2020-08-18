@@ -7,8 +7,6 @@ namespace Daenet.Common.Logging.Sql
 {
     public class SqlServerLoggerSettings : ISqlServerLoggerSettings
     {
-        public IDictionary<string, LogLevel> Switches { get; set; } = new Dictionary<string, LogLevel>();
-
         public bool IncludeScopes { get; set; }
 
         public bool IncludeExceptionStackTrace { get; set; }
