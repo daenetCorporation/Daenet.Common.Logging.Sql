@@ -20,6 +20,8 @@ namespace Daenet.Common.Logging.Sql
         public string ScopeSeparator { get; set; }
 
         public IList<KeyValuePair<string, string>> ScopeColumnMapping { get; set; } = new List<KeyValuePair<string, string>>();
+   
+        public IList<KeyValuePair<string, string>> DefaultScopeValues { get; set; } = new List<KeyValuePair<string, string>>();
 
         public int BatchSize { get; set; }
 

@@ -60,6 +60,11 @@ namespace Daenet.Common.Logging.Sql
         int BatchSize { get; set; }
 
         IList<KeyValuePair<string, string>> ScopeColumnMapping { get; }
+
+        /// <summary>
+        /// Sets the default values for a scope.
+        /// </summary>
+        IList<KeyValuePair<string, string>> DefaultScopeValues { get; }
         #endregion
     }
 }

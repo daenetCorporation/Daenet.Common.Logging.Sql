@@ -126,6 +126,15 @@ namespace Daenet.Common.Logging.Sql
                     settings.ScopeColumnMapping.Add(new KeyValuePair<string, string>(item.Key, item.Value));
                 }
             }
+
+            var defaultValues = sqlServerSection.GetSection("DefaultScopeValues");
+            if (defaultValues != null)
+            {
+                foreach (var item in defaultValues.GetChildren())
+                {
+                    settings.DefaultScopeValues.Add(new KeyValuePair<string, string>(item.Key, item.Value));
+                }
+            }
         }
     }
 }

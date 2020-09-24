@@ -67,7 +67,18 @@ namespace Daenet.Common.Logging.Sql
                     var current = this;
                     var scopeLog = string.Empty;
                     var length = builder.Length;
-                   
+
+                    // TODOD: Optimize
+                    // Loads the default values for a scope.
+                    foreach (var defaultScope in settings.DefaultScopeValues)
+                    {
+                        var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == defaultScope.Key);
+                        if (!String.IsNullOrEmpty(map.Key))
+                        {
+                            dictionary[settings.ScopeColumnMapping.IndexOf(map)] = defaultScope.Value;
+                        }
+                    }
+
                     //Is adding scope path configured
                     var addScopePath = !string.IsNullOrEmpty(settings.ScopeColumnMapping.FirstOrDefault(k => k.Key == "SCOPEPATH").Key);
                    
