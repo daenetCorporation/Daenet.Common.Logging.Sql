@@ -59,10 +59,10 @@ namespace Daenet.Common.Logging.Sql
         {
             if (settings.ScopeColumnMapping != null || settings.ScopeColumnMapping.Count > 0)
             {
-                string[] dictionary;
+                string[] scopeArray;
                 if (ScopeInformation == null)
                 {
-                    dictionary = new string[settings.ScopeColumnMapping.Count()];
+                    scopeArray = new string[settings.ScopeColumnMapping.Count()];
                     var builder = new StringBuilder();
                     var current = this;
                     var scopeLog = string.Empty;
@@ -75,7 +75,7 @@ namespace Daenet.Common.Logging.Sql
                         var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == defaultScope.Key);
                         if (!String.IsNullOrEmpty(map.Key))
                         {
-                            dictionary[settings.ScopeColumnMapping.IndexOf(map)] = defaultScope.Value;
+                            scopeArray[settings.ScopeColumnMapping.IndexOf(map)] = defaultScope.Value;
                         }
                     }
 
@@ -92,7 +92,7 @@ namespace Daenet.Common.Logging.Sql
                                 var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
                                 if (!String.IsNullOrEmpty(map.Key))
                                 {
-                                    dictionary[settings.ScopeColumnMapping.IndexOf(map)] = item.Value.ToString();
+                                    scopeArray[settings.ScopeColumnMapping.IndexOf(map)] = item.Value.ToString();
                                 }
                             }
                         }
@@ -114,14 +114,14 @@ namespace Daenet.Common.Logging.Sql
                     if (addScopePath)
                     {
                         var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == "SCOPEPATH");
-                        dictionary[settings.ScopeColumnMapping.IndexOf(map)] = builder.ToString();
+                        scopeArray[settings.ScopeColumnMapping.IndexOf(map)] = builder.ToString();
                     }
 
-                    this.ScopeInformation = dictionary.ToArray();
+                    this.ScopeInformation = scopeArray.ToArray();
                 }
                 else
                 {
-                    dictionary = ScopeInformation;
+                    scopeArray = ScopeInformation;
                 }
             }
             else
