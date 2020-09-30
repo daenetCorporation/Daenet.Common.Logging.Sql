@@ -61,8 +61,19 @@ namespace Daenet.Common.Logging.Sql
             if (SqlServerLoggerScope.Current != null)
                 scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
             else
+            {
                 scopeValues = new string[m_Settings.ScopeColumnMapping.Count()];
-
+                // TODOD: Optimize
+                // Loads the default values for a scope.
+                foreach (var defaultScope in m_Settings.DefaultScopeValues)
+                {
+                    var map = m_Settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == defaultScope.Key);
+                    if (!String.IsNullOrEmpty(map.Key))
+                    {
+                        scopeValues[m_Settings.ScopeColumnMapping.IndexOf(map)] = defaultScope.Value;
+                    }
+                }
+            }
             object[] args = new object[_columnCount];
             args[0] = eventId.Id; // EventId
             args[1] = Enum.GetName(typeof(LogLevel), logLevel); // Type
@@ -85,10 +96,24 @@ namespace Daenet.Common.Logging.Sql
             }
 
             if (CurrentList.Count >= m_BatchSize)
-                 WriteToDb();
+            {
+                if (m_BatchSize <= 1)
+                {
+                    WriteToDb().Wait();
+                }
+                else
+                {
+                    var task = new Task(async () =>
+                    {
+                        await WriteToDb();
+                    });
+                    task.Start();
+                }
+
+            }
         }
 
-        private void WriteToDb()
+        private async Task WriteToDb()
         {
             List<object[]> listToWrite;
 
@@ -118,11 +143,11 @@ namespace Daenet.Common.Logging.Sql
                         }
 
                         con.Open();
-
-                        if (m_BatchSize <= 1) // use sync method if BatchSize is < 1
-                            objbulk.WriteToServer(customDataReader);
-                        else // use async methodd
-                            objbulk.WriteToServerAsync(customDataReader);
+                        await objbulk.WriteToServerAsync(customDataReader);
+                        // if (m_BatchSize <= 1) // use sync method if BatchSize is < 1
+                        //objbulk.WriteToServer(customDataReader);
+                        /*                        else // use async methodd
+                                                    */
                     }
                 }
             }
@@ -144,7 +169,7 @@ namespace Daenet.Common.Logging.Sql
 
         private void handleError(Exception ex)
         {
-            if (m_Settings.IgnoreLoggingErrors && m_BatchSize <= 1)
+            if (m_Settings.IgnoreLoggingErrors || m_BatchSize > 1)
             {
                 Debug.WriteLine($"Logging has failed. {ex}");
             }
@@ -157,16 +182,18 @@ namespace Daenet.Common.Logging.Sql
 
         private void RunInsertTimer()
         {
-            if (m_Settings.InsertTimerInSec == 0 || m_Settings.BatchSize == 0)
+
+            if (m_Settings.InsertTimerInSec == 0 || m_Settings.BatchSize <= 1)
                 return;
 
-            _insertTimerTask = new Task(() =>
+            _insertTimerTask = new Task(async () =>
             {
                 while (true)
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(m_Settings.InsertTimerInSec));
+                    await Task.Delay(TimeSpan.FromSeconds(m_Settings.InsertTimerInSec));
+                    //Thread.Sleep(TimeSpan.FromSeconds(m_Settings.InsertTimerInSec));
 
-                    WriteToDb(); // Just assign it.
+                    await WriteToDb(); // Just assign it.
                 }
             });
 
