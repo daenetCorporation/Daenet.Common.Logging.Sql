@@ -81,7 +81,7 @@ namespace Daenet.Common.Logging.Sql
 
                     //Is adding scope path configured
                     var addScopePath = !string.IsNullOrEmpty(settings.ScopeColumnMapping.FirstOrDefault(k => k.Key == "SCOPEPATH").Key);
-                   
+
                     while (current != null)
                     {
                         if (current.CurrentValue is IEnumerable<KeyValuePair<string, object>>)
@@ -100,11 +100,11 @@ namespace Daenet.Common.Logging.Sql
                         {
                             if (length == builder.Length)
                             {
-                                scopeLog = $"{settings.ScopeSeparator}{current}";
+                                scopeLog = $"{settings.ScopeSeparator}{getScopeString(current)}";
                             }
                             else
                             {
-                                scopeLog = $"{settings.ScopeSeparator}{current} ";
+                                scopeLog = $"{settings.ScopeSeparator}{getScopeString(current)} ";
                             }
 
                             builder.Insert(length, scopeLog);
@@ -128,6 +128,26 @@ namespace Daenet.Common.Logging.Sql
                 ScopeInformation = new string[settings.ScopeColumnMapping.Count()];
 
             return ScopeInformation;
+        }
+
+        /// <summary>
+        /// Builds a scops string.
+        /// If ToString() is implemented then uses it if it returns a dictionary string.
+        /// </summary>
+        /// <param name="current"></param>
+        /// <returns></returns>
+        private string getScopeString(SqlServerLoggerScope current)
+        {
+
+            var ret = current.ToString();
+            if (ret.Contains("System.Collections.Generic.Dictionary")) // Example //=>System.Collections.Generic.Dictionary`2[System.String,System.Object] =>System.Collections.Generic.Dictionary`2[System.String,System.Object]
+            {
+                if (current.CurrentValue is IEnumerable<KeyValuePair<string, object>>)
+                {
+                    ret = "{" + string.Join(",", ((IEnumerable<KeyValuePair<string, object>>)current.CurrentValue).Select(a => $"{a.Key}->{a.Value}")) + "}";
+                }
+            }
+            return ret;
         }
 
         private class DisposableScope : IDisposable
