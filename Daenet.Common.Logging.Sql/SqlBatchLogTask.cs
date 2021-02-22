@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Daenet.Common.Logging.Sql
 {
@@ -129,25 +130,28 @@ namespace Daenet.Common.Logging.Sql
 
             try
             {
-                using (SqlConnection con = new SqlConnection(m_Settings.ConnectionString))
+                using (var scope = new TransactionScope(TransactionScopeOption.Suppress))
                 {
-                    //create object of SqlBulkCopy which help to insert  
-                    using (SqlBulkCopy objbulk = new SqlBulkCopy(con))
+                    using (SqlConnection con = new SqlConnection(m_Settings.ConnectionString))
                     {
-                        CustomDataReader customDataReader = new CustomDataReader(listToWrite);
-                        objbulk.DestinationTableName = m_Settings.TableName;
-
-                        foreach (var mapping in _sqlBulkCopyColumnMappingList)
+                        //create object of SqlBulkCopy which help to insert  
+                        using (SqlBulkCopy objbulk = new SqlBulkCopy(con))
                         {
-                            objbulk.ColumnMappings.Add(mapping);
-                        }
+                            CustomDataReader customDataReader = new CustomDataReader(listToWrite);
+                            objbulk.DestinationTableName = m_Settings.TableName;
 
-                        con.Open();
-                        await objbulk.WriteToServerAsync(customDataReader);
-                        // if (m_BatchSize <= 1) // use sync method if BatchSize is < 1
-                        //objbulk.WriteToServer(customDataReader);
-                        /*                        else // use async methodd
-                                                    */
+                            foreach (var mapping in _sqlBulkCopyColumnMappingList)
+                            {
+                                objbulk.ColumnMappings.Add(mapping);
+                            }
+
+                            con.Open();
+                            await objbulk.WriteToServerAsync(customDataReader);
+                            // if (m_BatchSize <= 1) // use sync method if BatchSize is < 1
+                            //objbulk.WriteToServer(customDataReader);
+                            /*                        else // use async methodd
+                                                        */
+                        }
                     }
                 }
             }
