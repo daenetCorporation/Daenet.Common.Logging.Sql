@@ -130,13 +130,16 @@ namespace Daenet.Common.Logging.Sql
 
             try
             {
-                using (var scope = new TransactionScope(TransactionScopeOption.Suppress))
+                // Supress the transaction from the outside, and activate the async flow.
+                using (var scope = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
                 {
                     using (SqlConnection con = new SqlConnection(m_Settings.ConnectionString))
                     {
                         //create object of SqlBulkCopy which help to insert  
                         using (SqlBulkCopy objbulk = new SqlBulkCopy(con))
                         {
+                            //
+                            // Map Logs to table.
                             CustomDataReader customDataReader = new CustomDataReader(listToWrite);
                             objbulk.DestinationTableName = m_Settings.TableName;
 
@@ -147,10 +150,6 @@ namespace Daenet.Common.Logging.Sql
 
                             con.Open();
                             await objbulk.WriteToServerAsync(customDataReader);
-                            // if (m_BatchSize <= 1) // use sync method if BatchSize is < 1
-                            //objbulk.WriteToServer(customDataReader);
-                            /*                        else // use async methodd
-                                                        */
                         }
                     }
                 }
