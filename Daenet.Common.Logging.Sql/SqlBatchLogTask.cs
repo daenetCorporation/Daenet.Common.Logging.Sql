@@ -56,25 +56,25 @@ namespace Daenet.Common.Logging.Sql
             }
         }
 
-        public void Push<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, string categoryName)
+        public void Push<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, string categoryName, IExternalScopeProvider externalScopeProvider)
         {
-            object[] scopeValues;
-            if (SqlServerLoggerScope.Current != null)
-                scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
-            else
-            {
-                scopeValues = new string[m_Settings.ScopeColumnMapping.Count()];
-                // TODOD: Optimize
-                // Loads the default values for a scope.
-                foreach (var defaultScope in m_Settings.DefaultScopeValues)
-                {
-                    var map = m_Settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == defaultScope.Key);
-                    if (!String.IsNullOrEmpty(map.Key))
-                    {
-                        scopeValues[m_Settings.ScopeColumnMapping.IndexOf(map)] = defaultScope.Value;
-                    }
-                }
-            }
+            object[] scopeValues = GetExternalScopeInformation(externalScopeProvider, m_Settings);
+            //if (SqlServerLoggerScope.Current != null)
+            //    scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
+            //else
+            //{
+            //    scopeValues = new string[m_Settings.ScopeColumnMapping.Count()];
+            //    // TODOD: Optimize
+            //    // Loads the default values for a scope.
+            //    foreach (var defaultScope in m_Settings.DefaultScopeValues)
+            //    {
+            //        var map = m_Settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == defaultScope.Key);
+            //        if (!String.IsNullOrEmpty(map.Key))
+            //        {
+            //            scopeValues[m_Settings.ScopeColumnMapping.IndexOf(map)] = defaultScope.Value;
+            //        }
+            //    }
+            //}
             object[] args = new object[_columnCount];
             args[0] = eventId.Id; // EventId
             args[1] = Enum.GetName(typeof(LogLevel), logLevel); // Type
@@ -112,6 +112,90 @@ namespace Daenet.Common.Logging.Sql
                 }
 
             }
+        }
+
+        internal string[] GetExternalScopeInformation(IExternalScopeProvider externalScopeProvider, ISqlServerLoggerSettings settings)
+        {
+            if (settings.ScopeColumnMapping != null || settings.ScopeColumnMapping.Count > 0)
+            {
+                string[] scopeArray;
+                scopeArray = new string[settings.ScopeColumnMapping.Count()];
+                var builder = new StringBuilder();
+                var current = this;
+                var scopeLog = string.Empty;
+                var length = builder.Length;
+
+                // TODOD: Optimize
+                // Loads the default values for a scope.
+                foreach (var defaultScope in settings.DefaultScopeValues)
+                {
+                    var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == defaultScope.Key);
+                    if (!String.IsNullOrEmpty(map.Key))
+                    {
+                        scopeArray[settings.ScopeColumnMapping.IndexOf(map)] = defaultScope.Value;
+                    }
+                }
+
+                //Is adding scope path configured
+                var addScopePath = !string.IsNullOrEmpty(settings.ScopeColumnMapping.FirstOrDefault(k => k.Key == "SCOPEPATH").Key);
+
+                externalScopeProvider.ForEachScope<object>((scope, state) =>
+                {
+                    if (scope is IEnumerable<KeyValuePair<string, object>>)
+                    {
+                        foreach (var item in (IEnumerable<KeyValuePair<string, object>>)scope)
+                        {
+                            // TODO: For performance reasons we need to remove FirstOrDefault and additional IndexOf call and use only one call.
+                            var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
+                            if (!String.IsNullOrEmpty(map.Key))
+                            {
+                                scopeArray[settings.ScopeColumnMapping.IndexOf(map)] = item.Value.ToString();
+                            }
+                        }
+                    }
+                    if (addScopePath)
+                    {
+                        if (length == builder.Length)
+                        {
+                            scopeLog = $"{settings.ScopeSeparator}{getScopeString(scope)}";
+                        }
+                        else
+                        {
+                            scopeLog = $"{settings.ScopeSeparator}{getScopeString(scope)} ";
+                        }
+
+                        builder.Insert(length, scopeLog);
+                    }
+                }, null);
+                    
+                if (addScopePath)
+                {
+                    var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == "SCOPEPATH");
+                    scopeArray[settings.ScopeColumnMapping.IndexOf(map)] = builder.ToString();
+                }
+
+                return scopeArray.ToArray();
+            }
+            return new string[0];
+        }
+
+        /// <summary>
+        /// Builds a scops string.
+        /// If ToString() is implemented then uses it if it returns a dictionary string.
+        /// </summary>
+        /// <param name="current"></param>
+        /// <returns></returns>
+        private string getScopeString(object current)
+        {
+            var ret = current.ToString();
+            if (ret.Contains("System.Collections.Generic.Dictionary")) // Example //=>System.Collections.Generic.Dictionary`2[System.String,System.Object] =>System.Collections.Generic.Dictionary`2[System.String,System.Object]
+            {
+                if (current is IEnumerable<KeyValuePair<string, object>>)
+                {
+                    ret = "{" + string.Join(",", ((IEnumerable<KeyValuePair<string, object>>)current).Select(a => $"{a.Key}->{a.Value}")) + "}";
+                }
+            }
+            return ret;
         }
 
         private async Task WriteToDb()

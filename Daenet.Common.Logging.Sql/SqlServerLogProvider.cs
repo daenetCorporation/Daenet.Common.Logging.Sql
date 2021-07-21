@@ -8,9 +8,11 @@ using System.Text;
 namespace Daenet.Common.Logging.Sql
 {
     [ProviderAlias("SqlProvider")]
-    public class SqlServerLogProvider : ILoggerProvider
+    public class SqlServerLogProvider : ILoggerProvider, ISupportExternalScope
     {
         private ISqlServerLoggerSettings m_Settings;
+
+        private IExternalScopeProvider _scopeProvider = NullExternalScopeProvider.Instance;
 
         public Func<string, LogLevel, bool> Filter { get; }
 
@@ -49,10 +51,76 @@ namespace Daenet.Common.Logging.Sql
 
         private SqlServerLogger createLoggerImplementation(string categoryName)
         {
-            return new SqlServerLogger(m_Settings, categoryName, Filter);
+            return new SqlServerLogger(m_Settings, categoryName, Filter) { ScopeProvider = _scopeProvider };
         }
 
 
+        public void Dispose()
+        {
+        }
+
+        public void ForEachScope<TState>(Action<object, TState> callback, TState state)
+        {
+
+        }
+
+        public IDisposable Push(object state)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public void SetScopeProvider(IExternalScopeProvider scopeProvider)
+        {
+            _scopeProvider = scopeProvider;
+
+            foreach (System.Collections.Generic.KeyValuePair<string, SqlServerLogger> logger in m_Loggers)
+            {
+                logger.Value.ScopeProvider = _scopeProvider;
+            }
+        }
+
+
+    }
+
+    /// <summary>
+    /// Scope provider that does nothing.
+    /// </summary>
+    internal class NullExternalScopeProvider : IExternalScopeProvider
+    {
+        private NullExternalScopeProvider()
+        {
+        }
+
+        /// <summary>
+        /// Returns a cached instance of <see cref="NullExternalScopeProvider"/>.
+        /// </summary>
+        public static IExternalScopeProvider Instance { get; } = new NullExternalScopeProvider();
+
+        /// <inheritdoc />
+        void IExternalScopeProvider.ForEachScope<TState>(Action<object, TState> callback, TState state)
+        {
+        }
+
+        /// <inheritdoc />
+        IDisposable IExternalScopeProvider.Push(object state)
+        {
+            return NullScope.Instance;
+        }
+    }
+
+    /// <summary>
+    /// An empty scope without any logic
+    /// </summary>
+    internal sealed class NullScope : IDisposable
+    {
+        public static NullScope Instance { get; } = new NullScope();
+
+        private NullScope()
+        {
+        }
+
+        /// <inheritdoc />
         public void Dispose()
         {
         }

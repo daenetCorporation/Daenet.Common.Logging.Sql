@@ -7,6 +7,7 @@ using System.Text;
 using System.Data;
 using System.Threading.Tasks;
 using System.Linq;
+using System.IO;
 
 namespace Daenet.Common.Logging.Sql
 {
@@ -22,6 +23,7 @@ namespace Daenet.Common.Logging.Sql
         private Func<string, LogLevel, bool> m_Filter;
         private string m_CategoryName;
 
+        internal IExternalScopeProvider ScopeProvider { get; set; }
 
         private static SqlBatchLogTask currentLogTaskInstance = null;
         private static readonly object padlock = new object();
@@ -90,7 +92,7 @@ namespace Daenet.Common.Logging.Sql
             //    var formattedException = exceptionFormatter(state, exception);
             //}
 
-            m_CurrentLogTask.Push(logLevel, eventId, state, exception, m_CategoryName);
+            m_CurrentLogTask.Push(logLevel, eventId, state, exception, m_CategoryName, ScopeProvider);
         }
 
 
