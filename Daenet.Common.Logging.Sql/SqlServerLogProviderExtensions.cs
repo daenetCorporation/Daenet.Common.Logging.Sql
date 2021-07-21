@@ -45,7 +45,7 @@ namespace Daenet.Common.Logging.Sql
             return builder;
         }
 
-        /// <summary>
+ /*       /// <summary>
         /// Adds Sql Logger to LoggerFactory
         /// </summary>
         /// <param name="loggerFactory">LoggerFactory Instance</param>
@@ -73,7 +73,7 @@ namespace Daenet.Common.Logging.Sql
             loggerFactory.AddProvider(new SqlServerLogProvider(config.GetSqlServerLoggerSettings(), null));
 
             return loggerFactory;
-        }
+        }*/
 
 
         /// <summary>

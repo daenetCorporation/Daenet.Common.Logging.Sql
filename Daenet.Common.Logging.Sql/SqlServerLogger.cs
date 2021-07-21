@@ -119,8 +119,8 @@ namespace Daenet.Common.Logging.Sql
         {
             if (m_IsLoggingDisabledOnError)
                 return false;
-
-            return m_Filter(m_CategoryName, logLevel);
+            return logLevel != LogLevel.None;
+          
         }
 
         #endregion
