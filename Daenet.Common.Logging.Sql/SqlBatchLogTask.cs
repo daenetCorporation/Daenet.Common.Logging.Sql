@@ -63,7 +63,7 @@ namespace Daenet.Common.Logging.Sql
             object[] args = new object[_columnCount];
             args[0] = eventId.Id; // EventId
             args[1] = Enum.GetName(typeof(LogLevel), logLevel); // Type
-            args[2] = state.ToString(); // Message
+            args[2] = state?.ToString(); // Message
             args[3] = DateTime.UtcNow; // Timestamp
             args[4] = categoryName; // CategoryName
             args[5] = exception == null ? (object)DBNull.Value : exception.ToString(); // Exception

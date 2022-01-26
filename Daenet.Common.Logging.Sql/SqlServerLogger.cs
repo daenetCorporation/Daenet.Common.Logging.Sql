@@ -84,15 +84,16 @@ namespace Daenet.Common.Logging.Sql
         {
             if (!IsEnabled(logLevel))
                 return;
+            string message;
+            if (exceptionFormatter != null)
+            {
+                // We need to format the value but we don't wnat to include the exception becasue this is stored seperatly.
+                message = exceptionFormatter(state, null);
+            }
+            else
+                message = state.ToString();
 
-            // TODO: Evaluate what do to with the formatted ecxeption.
-            // Only needed if exception != NULL? Or use very time?
-            //if (exceptionFormatter != null)
-            //{
-            //    var formattedException = exceptionFormatter(state, exception);
-            //}
-
-            m_CurrentLogTask.Push(logLevel, eventId, state, exception, m_CategoryName, ScopeProvider);
+            m_CurrentLogTask.Push(logLevel, eventId, message, exception, m_CategoryName, ScopeProvider);
         }
 
 
