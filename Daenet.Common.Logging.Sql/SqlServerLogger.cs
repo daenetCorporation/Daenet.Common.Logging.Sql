@@ -137,8 +137,7 @@ namespace Daenet.Common.Logging.Sql
             {
                 if (m_IsLoggingDisabledOnError == false)
                 {
-                    //TODO - Should log somewhere else later.
-                    Debug.WriteLine($"Logging has failed and it will be disabled. Error: {ex}");
+                    SqlServerLoggerErrors.HandleError("Logging has failed and it will be disabled.Error.", ex);
                 }
 
                 m_IsLoggingDisabledOnError = true;

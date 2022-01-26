@@ -59,22 +59,7 @@ namespace Daenet.Common.Logging.Sql
         public void Push<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, string categoryName, IExternalScopeProvider externalScopeProvider)
         {
             object[] scopeValues = GetExternalScopeInformation(externalScopeProvider, m_Settings);
-            //if (SqlServerLoggerScope.Current != null)
-            //    scopeValues = SqlServerLoggerScope.Current.GetScopeInformation(m_Settings);
-            //else
-            //{
-            //    scopeValues = new string[m_Settings.ScopeColumnMapping.Count()];
-            //    // TODOD: Optimize
-            //    // Loads the default values for a scope.
-            //    foreach (var defaultScope in m_Settings.DefaultScopeValues)
-            //    {
-            //        var map = m_Settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == defaultScope.Key);
-            //        if (!String.IsNullOrEmpty(map.Key))
-            //        {
-            //            scopeValues[m_Settings.ScopeColumnMapping.IndexOf(map)] = defaultScope.Value;
-            //        }
-            //    }
-            //}
+
             object[] args = new object[_columnCount];
             args[0] = eventId.Id; // EventId
             args[1] = Enum.GetName(typeof(LogLevel), logLevel); // Type
@@ -167,7 +152,7 @@ namespace Daenet.Common.Logging.Sql
                         builder.Insert(length, scopeLog);
                     }
                 }, null);
-                    
+
                 if (addScopePath)
                 {
                     var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == "SCOPEPATH");
@@ -258,11 +243,11 @@ namespace Daenet.Common.Logging.Sql
         {
             if (m_Settings.IgnoreLoggingErrors || m_BatchSize > 1)
             {
-                Debug.WriteLine($"Logging has failed. {ex}");
+                SqlServerLoggerErrors.HandleError("Logging has failed.", ex);
             }
             else
             {
-                Debug.WriteLine($"Ignore Error is disabled and an Exception occured: {ex}");
+                SqlServerLoggerErrors.HandleError("Ignore Error is disabled and an Exception occured.", ex);
                 throw new Exception("Ignore Error is disabled and an Exception occured.", ex);
             }
         }
