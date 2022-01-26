@@ -36,7 +36,8 @@ namespace Daenet.Common.Logging.Sql.Test
             builder.AddJsonFile(settingsFile);
             var configRoot = builder.Build();
 
-            ILoggerFactory loggerFactory = new LoggerFactory().AddSqlServerLogger(configRoot.GetSqlServerLoggerSettings(), filter);
+            ILoggerFactory loggerFactory = new LoggerFactory();
+            loggerFactory.AddProvider(new SqlServerLogProvider(configRoot.GetSqlServerLoggerSettings()));
             ILogger logger = loggerFactory.CreateLogger<SqlServerLoggerSwitchTests>();
             return logger;
         }
