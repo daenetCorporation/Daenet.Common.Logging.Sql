@@ -88,10 +88,10 @@ namespace Daenet.Common.Logging.Sql
             if (exceptionFormatter != null)
             {
                 // We need to format the value but we don't wnat to include the exception becasue this is stored seperatly.
-                message = exceptionFormatter(state, null);
+                message = exceptionFormatter(state, null) ?? "";
             }
             else
-                message = state.ToString();
+                message = state.ToString() ?? "";
 
             m_CurrentLogTask.Push(logLevel, eventId, message, exception, m_CategoryName, ScopeProvider);
         }
