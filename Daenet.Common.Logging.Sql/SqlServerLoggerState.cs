@@ -2,18 +2,31 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Daenet.Common.Logging.Sql
 {
     /// <summary>
     /// Stores as a snik the last error. becasue the logger should not return an error.
+    /// This can be used to check if the logger works correctly or if there are any errors.
+    /// All Operations are thread safe.
     /// </summary>
-    public static class SqlServerLoggerErrors
+    public static class SqlServerLoggerState
     {
         /// <summary>
         /// The Last which is called.
         /// </summary>
         public static SqlServerLoggerError LastError { get; private set; }
+
+        /// <summary>
+        /// Commits the current batch to the database.
+        /// </summary>
+        /// <returns></returns>
+        public static Task CommitBatch()
+        {
+            return SqlServerLogger.CurrentLogTaskInstance?.WriteToDb();
+        }
+
 
         /// <summary>
         /// Handle the error. this is not thread save the last one who writes wins.

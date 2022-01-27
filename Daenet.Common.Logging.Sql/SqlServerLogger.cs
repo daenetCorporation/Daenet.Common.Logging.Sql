@@ -18,17 +18,26 @@ namespace Daenet.Common.Logging.Sql
         /// </summary>
         private bool m_IsLoggingDisabledOnError = false;
 
-        private bool m_IgnoreLoggingErrors = false;
+        /// <summary>
+        /// The current settings.
+        /// </summary>
         private ISqlServerLoggerSettings m_Settings;
-        private Func<string, LogLevel, bool> m_Filter;
+
+        /// <summary>
+        /// The Category name for this specfic logger.
+        /// </summary>
         private string m_CategoryName;
 
+        /// <summary>
+        /// The Externam Scope provider.
+        /// </summary>
         internal IExternalScopeProvider ScopeProvider { get; set; }
+
 
         private static SqlBatchLogTask currentLogTaskInstance = null;
         private static readonly object padlock = new object();
 
-        private SqlBatchLogTask m_CurrentLogTask
+        private SqlBatchLogTask CurrentLogTask
         {
             get
             {
@@ -43,7 +52,16 @@ namespace Daenet.Common.Logging.Sql
             }
         }
 
-//    public Func<LogLevel, EventId, object, Exception, SqlCommand> SqlCommandFormatter { get; set; }
+        /// <summary>
+        /// Gets a current instance if exists.
+        /// </summary>
+        internal static SqlBatchLogTask CurrentLogTaskInstance
+        {
+            get
+            {
+                return currentLogTaskInstance;
+            }
+        }
 
         #region Public Methods
 
@@ -57,12 +75,6 @@ namespace Daenet.Common.Logging.Sql
                     m_Settings.ScopeSeparator = "=>";
 
                 m_CategoryName = categoryName;
-                if (filter == null)
-                    m_Filter = ((category, logLevel) => true);
-                else
-                    m_Filter = filter;
-
-                m_IgnoreLoggingErrors = settings.IgnoreLoggingErrors;
             }
             catch (Exception ex)
             {
@@ -93,7 +105,7 @@ namespace Daenet.Common.Logging.Sql
             else
                 message = state.ToString() ?? "";
 
-            m_CurrentLogTask.Push(logLevel, eventId, message, exception, m_CategoryName, ScopeProvider);
+            CurrentLogTask.Push(logLevel, eventId, message, exception, m_CategoryName, ScopeProvider);
         }
 
 
@@ -123,7 +135,7 @@ namespace Daenet.Common.Logging.Sql
             if (m_IsLoggingDisabledOnError)
                 return false;
             return logLevel != LogLevel.None;
-          
+
         }
 
         #endregion
@@ -134,11 +146,11 @@ namespace Daenet.Common.Logging.Sql
         private void handleError(Exception ex)
         {
 
-            if (m_IgnoreLoggingErrors)
+            if (m_Settings.IgnoreLoggingErrors)
             {
                 if (m_IsLoggingDisabledOnError == false)
                 {
-                    SqlServerLoggerErrors.HandleError("Logging has failed and it will be disabled.Error.", ex);
+                    SqlServerLoggerState.HandleError("Logging has failed and it will be disabled.Error.", ex);
                 }
 
                 m_IsLoggingDisabledOnError = true;

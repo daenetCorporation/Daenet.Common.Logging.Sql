@@ -14,10 +14,33 @@ namespace Daenet.Common.Logging.Sql
 {
     internal class SqlBatchLogTask
     {
+        /*        TODO: For future Implementation if we want to presere the batch if somethign failed.
+         *        /// <summary>
+                /// The maximum which the buffer is allowed to be, before it will be cleared.
+                /// 
+                /// </summary>
+                private const int MAX_BUFFER = 10000;
+                /// <summary>
+                /// The ammount which is cleared if buffer size is reached.
+                /// </summary>
+                private const int MAX_BUFFER_Clear = 1000;*/
+        /// <summary>
+        /// The settings object.
+        /// </summary>
         private ISqlServerLoggerSettings m_Settings;
-        private int m_BatchSize;
+
+        /// <summary>
+        /// The count of all static coulms which should always be used.
+        /// </summary>
         private const int staticColumnCount = 6; // EventId, Type, Message, TimeStamp, CategoryName, Exception = 6
+        
+        /// <summary>
+        /// The actual column count.
+        /// </summary>
         private int _columnCount;
+
+      
+        
         List<object[]> CurrentList = new List<object[]>();
         private Task _insertTimerTask;
         private List<SqlBulkCopyColumnMapping> _sqlBulkCopyColumnMappingList;
@@ -27,8 +50,6 @@ namespace Daenet.Common.Logging.Sql
         public SqlBatchLogTask(ISqlServerLoggerSettings settings)
         {
             m_Settings = settings;
-            m_BatchSize = Convert.ToInt32(m_Settings.BatchSize);
-
             _columnCount = staticColumnCount + m_Settings.ScopeColumnMapping.Count();
 
             buildColumnMapping();
@@ -81,9 +102,9 @@ namespace Daenet.Common.Logging.Sql
                 CurrentList.Add(args);
             }
 
-            if (CurrentList.Count >= m_BatchSize)
+            if (CurrentList.Count >= m_Settings.BatchSize)
             {
-                if (m_BatchSize <= 1)
+                if (m_Settings.BatchSize <= 1)
                 {
                     WriteToDb().Wait();
                 }
@@ -183,7 +204,7 @@ namespace Daenet.Common.Logging.Sql
             return ret;
         }
 
-        private async Task WriteToDb()
+        internal async Task WriteToDb()
         {
             List<object[]> listToWrite;
 
@@ -241,13 +262,13 @@ namespace Daenet.Common.Logging.Sql
 
         private void handleError(Exception ex)
         {
-            if (m_Settings.IgnoreLoggingErrors || m_BatchSize > 1)
+            if (m_Settings.IgnoreLoggingErrors || m_Settings.BatchSize > 1)
             {
-                SqlServerLoggerErrors.HandleError("Logging has failed.", ex);
+                SqlServerLoggerState.HandleError("Logging has failed.", ex);
             }
             else
             {
-                SqlServerLoggerErrors.HandleError("Ignore Error is disabled and an Exception occured.", ex);
+                SqlServerLoggerState.HandleError("Ignore Error is disabled and an Exception occured.", ex);
                 throw new Exception("Ignore Error is disabled and an Exception occured.", ex);
             }
         }
