@@ -27,7 +27,7 @@ namespace Daenet.Common.Logging.Sql
         /// <summary>
         /// The settings object.
         /// </summary>
-        private ISqlServerLoggerSettings m_Settings;
+        private ISqlServerLoggerSettings settings;
 
         /// <summary>
         /// The count of all static coulms which should always be used.
@@ -37,20 +37,20 @@ namespace Daenet.Common.Logging.Sql
         /// <summary>
         /// The actual column count.
         /// </summary>
-        private int _columnCount;
+        private int columnCount;
 
       
         
         List<object[]> CurrentList = new List<object[]>();
         private Task _insertTimerTask;
-        private List<SqlBulkCopyColumnMapping> _sqlBulkCopyColumnMappingList;
+        private List<SqlBulkCopyColumnMapping> sqlBulkCopyColumnMappingList;
 
         private readonly object lockObject = new object();
 
         public SqlBatchLogTask(ISqlServerLoggerSettings settings)
         {
-            m_Settings = settings;
-            _columnCount = staticColumnCount + m_Settings.ScopeColumnMapping.Count();
+            this.settings = settings;
+            columnCount = staticColumnCount + this.settings.ScopeColumnMapping.Count();
 
             buildColumnMapping();
 
@@ -59,29 +59,29 @@ namespace Daenet.Common.Logging.Sql
 
         private void buildColumnMapping()
         {
-            _sqlBulkCopyColumnMappingList = new List<SqlBulkCopyColumnMapping>();
+            sqlBulkCopyColumnMappingList = new List<SqlBulkCopyColumnMapping>();
 
-            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("0", "EventId"));
-            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("1", "Type"));
-            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("2", "Message"));
-            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("3", "TimeStamp"));
-            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("4", "CategoryName"));
-            _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("5", "Exception"));
+            sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("0", "EventId"));
+            sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("1", "Type"));
+            sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("2", "Message"));
+            sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("3", "TimeStamp"));
+            sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("4", "CategoryName"));
+            sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping("5", "Exception"));
 
             int actualColumn = staticColumnCount;
 
-            foreach (var mapping in m_Settings.ScopeColumnMapping)
+            foreach (var mapping in settings.ScopeColumnMapping)
             {
-                _sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping(actualColumn.ToString(), mapping.Value));
+                sqlBulkCopyColumnMappingList.Add(new SqlBulkCopyColumnMapping(actualColumn.ToString(), mapping.Value));
                 actualColumn++;
             }
         }
 
         public void Push<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, string categoryName, IExternalScopeProvider externalScopeProvider)
         {
-            object[] scopeValues = GetExternalScopeInformation(externalScopeProvider, m_Settings);
+            object[] scopeValues = GetExternalScopeInformation(externalScopeProvider, settings);
 
-            object[] args = new object[_columnCount];
+            object[] args = new object[columnCount];
             args[0] = eventId.Id; // EventId
             args[1] = Enum.GetName(typeof(LogLevel), logLevel); // Type
             args[2] = state?.ToString(); // Message
@@ -91,7 +91,7 @@ namespace Daenet.Common.Logging.Sql
 
             int actualColumn = staticColumnCount;
 
-            for (int i = 0; i < m_Settings.ScopeColumnMapping.Count(); i++)
+            for (int i = 0; i < settings.ScopeColumnMapping.Count(); i++)
             {
                 args[actualColumn] = scopeValues[i];
                 actualColumn++;
@@ -102,9 +102,9 @@ namespace Daenet.Common.Logging.Sql
                 CurrentList.Add(args);
             }
 
-            if (CurrentList.Count >= m_Settings.BatchSize)
+            if (CurrentList.Count >= settings.BatchSize)
             {
-                if (m_Settings.BatchSize <= 1)
+                if (settings.BatchSize <= 1)
                 {
                     WriteToDb().Wait();
                 }
@@ -223,7 +223,7 @@ namespace Daenet.Common.Logging.Sql
                 // Supress the transaction from the outside, and activate the async flow.
                 using (var scope = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
                 {
-                    using (SqlConnection con = new SqlConnection(m_Settings.ConnectionString))
+                    using (SqlConnection con = new SqlConnection(settings.ConnectionString))
                     {
                         //create object of SqlBulkCopy which help to insert  
                         using (SqlBulkCopy objbulk = new SqlBulkCopy(con))
@@ -231,9 +231,9 @@ namespace Daenet.Common.Logging.Sql
                             //
                             // Map Logs to table.
                             CustomDataReader customDataReader = new CustomDataReader(listToWrite);
-                            objbulk.DestinationTableName = m_Settings.TableName;
+                            objbulk.DestinationTableName = settings.TableName;
 
-                            foreach (var mapping in _sqlBulkCopyColumnMappingList)
+                            foreach (var mapping in sqlBulkCopyColumnMappingList)
                             {
                                 objbulk.ColumnMappings.Add(mapping);
                             }
@@ -249,7 +249,7 @@ namespace Daenet.Common.Logging.Sql
                 if (invalidEx.Message == "The given ColumnMapping does not match up with any column in the source or destination.")
                 {
 
-                    handleError(new Exception($"Missing/Invalid table columns. Required columns: {String.Join(",", _sqlBulkCopyColumnMappingList.Select(d => d.DestinationColumn))}", invalidEx));
+                    handleError(new Exception($"Missing/Invalid table columns. Required columns: {String.Join(",", sqlBulkCopyColumnMappingList.Select(d => d.DestinationColumn))}", invalidEx));
                 }
                 else
                     handleError(invalidEx);
@@ -262,7 +262,7 @@ namespace Daenet.Common.Logging.Sql
 
         private void handleError(Exception ex)
         {
-            if (m_Settings.IgnoreLoggingErrors || m_Settings.BatchSize > 1)
+            if (settings.IgnoreLoggingErrors || settings.BatchSize > 1)
             {
                 SqlServerLoggerState.HandleError("Logging has failed.", ex);
             }
@@ -276,14 +276,14 @@ namespace Daenet.Common.Logging.Sql
         private void RunInsertTimer()
         {
 
-            if (m_Settings.InsertTimerInSec == 0 || m_Settings.BatchSize <= 1)
+            if (settings.InsertTimerInSec == 0 || settings.BatchSize <= 1)
                 return;
 
             _insertTimerTask = new Task(async () =>
             {
                 while (true)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(m_Settings.InsertTimerInSec));
+                    await Task.Delay(TimeSpan.FromSeconds(settings.InsertTimerInSec));
                     //Thread.Sleep(TimeSpan.FromSeconds(m_Settings.InsertTimerInSec));
 
                     await WriteToDb(); // Just assign it.

@@ -45,36 +45,6 @@ namespace Daenet.Common.Logging.Sql
             return builder;
         }
 
- /*       /// <summary>
-        /// Adds Sql Logger to LoggerFactory
-        /// </summary>
-        /// <param name="loggerFactory">LoggerFactory Instance</param>
-        /// <param name="settings">Sql Logger Settings</param>
-        /// <param name="filter">If specified it will override all defined switches.</param>  
-        /// <returns></returns>        
-        public static ILoggerFactory AddSqlServerLogger(this ILoggerFactory loggerFactory,
-          ISqlServerLoggerSettings settings,
-          Func<string, LogLevel, bool> filter = null)
-        {
-            loggerFactory.AddProvider(new SqlServerLogProvider(settings, filter));
-
-            return loggerFactory;
-        }
-
-        /// <summary>
-        /// Adds a SQL Logger to the Logger factory.
-        /// </summary>
-        /// <param name="loggerFactory">The Logger factory instance.</param>
-        /// <param name="config">The .NET Core Configuration for the logger section.</param>
-        /// <returns></returns>
-        public static ILoggerFactory AddSqlServerLogger(this ILoggerFactory loggerFactory, IConfiguration config)
-        {
-
-            loggerFactory.AddProvider(new SqlServerLogProvider(config.GetSqlServerLoggerSettings(), null));
-
-            return loggerFactory;
-        }*/
-
 
         /// <summary>
         /// Gets settings from configuration.

@@ -8,6 +8,7 @@ using System.Data;
 using System.Threading.Tasks;
 using System.Linq;
 using System.IO;
+using static System.Net.WebRequestMethods;
 
 namespace Daenet.Common.Logging.Sql
 {
@@ -137,6 +138,37 @@ namespace Daenet.Common.Logging.Sql
             return logLevel != LogLevel.None;
 
         }
+
+        #region Message Query Methods
+
+
+        /// <summary>
+        /// Gets all table used for logging.
+        /// Requires DBA permission.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public string[] GetLogTables()
+        {
+            // Enlist all tables and see if they have logging columns.
+            throw new NotImplementedException();
+        }
+
+
+        /// <summary>
+        /// Queries 
+        /// </summary>
+        /// <param name="tableName">The name of the table to query messages from.</param>
+        /// <param name="fromTime">Optional. Return only messages starting from the given time.</param>
+        /// <param name="maxMessages">Maximall number of messages to return. Default value is 10000.</param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public ICollection<LogMessage> GetLogMessages(string tableName, int maxMessages = 10000, DateTime? fromTime = null)
+        {
+            // Implement the class LogMessage.
+            throw new NotImplementedException();
+        }
+        #endregion
 
         #endregion
 
