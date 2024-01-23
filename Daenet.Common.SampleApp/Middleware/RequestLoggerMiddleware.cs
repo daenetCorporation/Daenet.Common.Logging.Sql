@@ -48,7 +48,7 @@ namespace Daenet.Common.SampleApp.Middleware
                 {cActivityIdHdrName, activityId }
             });
 
-            context.Response.Headers.Add(cActivityIdHdrName, activityId);
+            context.Response.Headers.Append(cActivityIdHdrName, activityId);
 
             await m_Next.Invoke(context);
         }

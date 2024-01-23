@@ -1,13 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Daenet.Common.Logging.Sql", "Daenet.Common.Logging.Sql\Daenet.Common.Logging.Sql.csproj", "{038C78AD-FF3D-4483-9100-83DC901CB543}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Daenet.Common.Logging.Sql.Test", "Daenet.Common.Logging.Sql.Test\Daenet.Common.Logging.Sql.Test.csproj", "{CC7F3700-2773-4A76-BAE1-69C0CEC5A315}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Daenet.Common.SampleApp", "Daenet.Common.SampleApp\Daenet.Common.SampleApp.csproj", "{B6B192B7-E581-4FC9-8534-0AE51D0EEA13}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A07A6ABA-1BC7-4306-9745-77C51F784C72}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
