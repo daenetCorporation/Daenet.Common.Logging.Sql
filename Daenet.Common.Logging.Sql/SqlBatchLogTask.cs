@@ -155,7 +155,7 @@ namespace Daenet.Common.Logging.Sql
                             var map = settings.ScopeColumnMapping.FirstOrDefault(a => a.Key == item.Key);
                             if (!String.IsNullOrEmpty(map.Key))
                             {
-                                scopeArray[settings.ScopeColumnMapping.IndexOf(map)] = item.Value.ToString();
+                                scopeArray[settings.ScopeColumnMapping.IndexOf(map)] = item.Value?.ToString();
                             }
                         }
                     }
