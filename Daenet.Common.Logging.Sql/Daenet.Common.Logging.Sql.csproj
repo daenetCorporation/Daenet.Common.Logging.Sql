@@ -11,12 +11,14 @@
     <PackageIconUrl>https://avatars3.githubusercontent.com/u/12556447?v=4&amp;s=200</PackageIconUrl>
     <RepositoryUrl>https://github.com/daenetCorporation/Daenet.Common.Logging.Sql.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/daenetCorporation/Daenet.Common.Logging.Sql</PackageProjectUrl>
-    <PackageTags>ilogger asp-net-core net-core core sql</PackageTags>
+    <PackageTags>ilogger asp-net-core net-core core net sql</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <FileVersion>1.1.0.0</FileVersion>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>daenet_logo_package_icon.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -35,6 +37,16 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="daenet_logo_package_icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 </Project>
