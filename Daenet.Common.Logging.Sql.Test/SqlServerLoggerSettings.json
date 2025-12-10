@@ -5,10 +5,13 @@
   },
   "SqlProvider": {
     "ConnectionString": "TODO",
-    "TableName": "TestLoggerDB",
+    "TableName": "SqlLog",
     "CreateTblIfNotExist": true,
     "IncludeExceptionStackTrace": false,
     "IgnoreLoggingErrors": false,
-    "ScopeSeparator":  "/"
+    "ScopeSeparator": "/",
+    "ScopeColumnMapping": {
+      "SCOPEPATH": "Scope"
+    }
   }
 }

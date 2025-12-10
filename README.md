@@ -88,6 +88,14 @@ Following example illustrates using scope in logging when *IncludeScopes* flag i
 ```
 This will add "Scope begins : *new hexadecimal guid*" for every object instance of the class where scope is began.
 
+And to persist the scope value to the database, you must map SCOPEPATH to the corresponding column name using the ScopeColumnMapping configuration:
+
+````JSON
+"ScopeColumnMapping": {
+        "SCOPEPATH": "Scope"
+      }
+````
+
 *ConnectionString* is ADO.NET connection string for SQL authentication.
 
 *TableName* is name of the table where logger should log.

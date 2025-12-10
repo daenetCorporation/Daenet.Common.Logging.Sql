@@ -1,13 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Diagnostics;
-using System.Text;
-using System.Data;
-using System.Threading.Tasks;
-using System.Linq;
-using System.IO;
 
 namespace Daenet.Common.Logging.Sql
 {
